@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>重点关注 - 班课管理系统</title>
+<style>
+  :root{
+    --orange: #FF6A39;
+    --orange-dark: #E85A2A;
+    --orange-tint: #FFF1EC;
+    --bg: #F5F6F8;
+    --card: #FFFFFF;
+    --text-1: #1F2329;
+    --text-2: #646A73;
+    --text-3: #8F959E;
+    --border: #E5E6EB;
+    --red: #F53F3F;
+    --red-tint: #FFECE8;
+    --amber: #FF7D00;
+    --amber-tint: #FFF3E5;
+    --blue: #3491FA;
+    --blue-tint: #E8F3FF;
+    --green: #00B42A;
+    --green-tint: #E8FFEA;
+    --purple: #7C5CFC;
+    --purple-tint: #F1EEFF;
+    --grey-tint: #F2F3F5;
+    --sidebar-w: 216px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:var(--bg);
+    font-family:-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    color:var(--text-1);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- App shell ---------- */
+  .app-shell{display:flex;min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:var(--sidebar-w);flex-shrink:0;background:#fff;border-right:1px solid var(--border);
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  }
+  .sidebar-logo{
+    height:56px;display:flex;align-items:center;gap:10px;padding:0 18px;
+    font-size:16px;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  .sidebar-logo .mark{
+    width:28px;height:28px;border-radius:8px;flex-shrink:0;
+    background:linear-gradient(135deg, var(--orange), #FF8A5C);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;
+  }
+  .side-nav{padding:10px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+  .side-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;
+    font-size:14px;color:var(--text-2);cursor:pointer;user-select:none;
+  }
+  .side-item:hover{background:var(--grey-tint);}
+  .side-item .ic{width:18px;text-align:center;font-size:14px;}
+  .side-group.active .side-item{color:var(--orange-dark);background:var(--orange-tint);font-weight:600;}
+  .side-sub{padding-left:34px;margin-top:2px;margin-bottom:4px;display:flex;flex-direction:column;gap:2px;}
+  .side-sub-item{
+    font-size:13px;color:var(--text-2);padding:8px 10px;border-radius:7px;cursor:pointer;position:relative;
+  }
+  .side-sub-item:hover{background:var(--grey-tint);}
+  .side-sub-item.active{color:var(--orange);font-weight:700;background:#fff;}
+  .side-sub-item.active::before{
+    content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);
+    width:4px;height:14px;background:var(--orange);border-radius:3px;
+  }
+  .sidebar-foot{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);}
+
+  /* ---------- Main column ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+
+  .topbar{
+    height:56px;background:#fff;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;
+  }
+  .breadcrumb{font-size:13px;color:var(--text-3);}
+  .breadcrumb b{color:var(--text-1);font-weight:600;}
+  .breadcrumb span{margin:0 6px;}
+  .topbar-right{display:flex;align-items:center;gap:18px;}
+  .icon-btn{
+    width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    color:var(--text-2);font-size:16px;position:relative;cursor:pointer;
+  }
+  .icon-btn:hover{background:var(--grey-tint);}
+  .avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--orange-tint);color:var(--orange-dark);
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+  }
+  .user-name{font-size:13px;color:var(--text-1);font-weight:600;}
+
+  /* ---------- Secondary tabs ---------- */
+  .tabs{
+    background:#fff;border-bottom:1px solid var(--border);
+    display:flex;gap:32px;padding:0 24px;flex-shrink:0;
+  }
+  .tabs .tab{
+    display:inline-block;padding:14px 0;font-size:15px;color:var(--text-2);
+    border-bottom:2px solid transparent;cursor:pointer;position:relative;user-select:none;
+  }
+  .tabs .tab.active{color:var(--orange);font-weight:700;border-bottom-color:var(--orange);cursor:default;}
+  .tabs .tab.new-badge::after{
+    content:"NEW";position:absolute;top:6px;right:-26px;
+    background:var(--red);color:#fff;font-size:9px;font-weight:700;
+    padding:1px 5px;border-radius:8px;letter-spacing:.5px;
+  }
+
+  .page{padding:20px 24px 60px;max-width:1560px;margin:0 auto;width:100%;}
+
+  /* ---------- Overview cards ---------- */
+  .overview{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;
+  }
+  .ov-card{
+    background:var(--card);border-radius:10px;padding:20px 22px;
+    box-shadow:0 1px 2px rgba(20,24,31,.04);border:1px solid var(--border);
+  }
+  .ov-card .label{font-size:13px;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .ov-card .num{font-size:30px;font-weight:700;line-height:1;color:var(--text-1);transition:color .15s;}
+  .ov-card.accent-risk .num{color:var(--red);}
+  .ov-card.accent-orange .num{color:var(--orange);}
+  .ov-card.accent-blue .num{color:var(--blue);}
+  .ov-card .sub{font-size:12px;color:var(--text-3);margin-top:8px;}
+  .dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+  .dot.red{background:var(--red);}
+  .dot.orange{background:var(--orange);}
+  .dot.blue{background:var(--blue);}
+
+  /* ---------- Filter bar ---------- */
+  .filter-bar{
+    background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;
+  }
+  .filter-bar input[type="text"]{
+    width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-1);
+    outline:none;
+  }
+  .filter-bar input[type="text"]:focus{border-color:var(--orange);}
+  .filter-bar input[type="date"]{
+    padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;color:var(--text-1);outline:none;
+  }
+  .filter-bar select{
+    padding:8px 30px 8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-2);
+    background:#fff;outline:none;cursor:pointer;
+  }
+  .filter-bar select:focus{border-color:var(--orange);}
+
+  /* ---------- Multi-select filter (重点表现) ---------- */
+  .ms-filter{position:relative;}
+  .ms-trigger{
+    padding:8px 30px 8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-2);
+    background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M1 1l4 4 4-4" stroke="%238F959E" stroke-width="1.4" fill="none"/></svg>') no-repeat right 12px center;
+    cursor:pointer;white-space:nowrap;min-width:150px;text-align:left;
+  }
+  .ms-trigger:hover{border-color:var(--text-3);}
+  .ms-trigger.has-selection{color:var(--orange-dark);border-color:var(--orange);background-color:var(--orange-tint);}
+  .ms-panel{
+    display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:50;width:260px;max-height:360px;overflow-y:auto;
+    background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(20,24,31,.12);padding:8px;
+  }
+  .ms-panel.show{display:block;}
+  .ms-group-label{font-size:11px;color:var(--text-3);font-weight:700;padding:6px 8px 4px;}
+  .ms-option{
+    display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:13px;color:var(--text-1);
+    cursor:pointer;user-select:none;
+  }
+  .ms-option:hover{background:var(--grey-tint);}
+  .ms-option input{accent-color:var(--orange);width:14px;height:14px;flex-shrink:0;cursor:pointer;}
+  .ms-actions{display:flex;justify-content:space-between;align-items:center;padding:8px 6px 2px;margin-top:4px;border-top:1px solid var(--border);}
+  .ms-actions button{background:none;border:none;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 6px;}
+  .ms-actions .ms-clear{color:var(--text-3);}
+  .ms-actions .ms-clear:hover{color:var(--text-2);}
+  .ms-actions .ms-done{color:var(--orange);}
+  .ms-actions .ms-done:hover{color:var(--orange-dark);}
+
+  .filter-spacer{flex:1;}
+  .result-count{font-size:13px;color:var(--text-2);white-space:nowrap;}
+  .result-count b{color:var(--text-1);}
+  .btn{
+    padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;
+  }
+  .btn-ghost{background:#fff;border-color:var(--border);color:var(--text-2);}
+  .btn-ghost:hover{background:var(--grey-tint);}
+  .btn-primary{background:var(--orange);border-color:var(--orange);color:#fff;}
+  .btn-primary:hover{background:var(--orange-dark);border-color:var(--orange-dark);}
+  .btn-sm{padding:6px 12px;font-size:12.5px;}
+  .btn:focus-visible, .side-item:focus-visible, .tab:focus-visible, .link-btn:focus-visible, .op-link:focus-visible{
+    outline:2px solid var(--orange);outline-offset:2px;
+  }
+  .custom-range{display:flex;align-items:center;gap:6px;}
+  .custom-range span{font-size:12px;color:var(--text-3);}
+
+  /* ---------- Task list ---------- */
+  .list-panel{
+    background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  }
+  .list-head, .list-row{
+    display:grid;grid-template-columns:104px 80px 150px 1fr 140px 140px 140px 76px 128px;gap:12px;align-items:center;
+  }
+  .list-head{
+    padding:11px 20px;background:var(--grey-tint);border-bottom:1px solid var(--border);
+    font-size:12px;color:var(--text-3);font-weight:600;
+  }
+  .empty-state{
+    text-align:center;padding:60px 20px;color:var(--text-3);font-size:14px;
+  }
+  .list-row{
+    padding:14px 20px;border-bottom:1px solid var(--border);border-left:3px solid transparent;
+    transition:background .15s;
+  }
+  .list-row:last-child{border-bottom:none;}
+  .list-row:hover{background:#FAFBFC;}
+  .list-row.sev-risk{border-left-color:var(--red);}
+  .list-row.sev-ghost{border-left-color:var(--purple);}
+  .list-row.sev-weak{border-left-color:var(--amber);}
+  .list-row.sev-good{border-left-color:var(--green);}
+  .list-row.risk-l3{background:var(--red-tint);}
+  .list-row.done{opacity:.6;}
+
+  .stu-cell{display:flex;align-items:center;min-width:0;cursor:pointer;}
+  .stu-name{font-weight:600;color:var(--text-1);font-size:13.5px;}
+  .stu-name:hover{color:var(--orange-dark);text-decoration:underline;}
+  .cls-cell{font-size:12.5px;color:var(--text-2);}
+
+  .lvl-cell{display:flex;flex-direction:column;align-items:flex-start;gap:5px;}
+  .urgent-badge{
+    display:inline-flex;align-items:center;gap:5px;background:var(--red);color:#fff;font-size:11px;font-weight:700;
+    padding:2px 7px;border-radius:6px;
+  }
+  .urgent-badge .ping{
+    width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.4s infinite;
+  }
+  @keyframes pulse{
+    0%{opacity:1;transform:scale(1);}
+    50%{opacity:.4;transform:scale(1.4);}
+    100%{opacity:1;transform:scale(1);}
+  }
+  .reason-level{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;white-space:nowrap;}
+  .lvl-l3, .lvl-l2{background:var(--red-tint);color:var(--red);}
+  .lvl-ghost-high, .lvl-ghost-low{background:var(--purple-tint);color:var(--purple);}
+  .lvl-weak{background:var(--amber-tint);color:var(--amber);}
+  .lvl-good{background:var(--green-tint);color:var(--green);}
+
+  .dim-tag-row{display:flex;flex-wrap:wrap;gap:4px;}
+  .reason-level.dim-tag{font-size:10px;font-weight:600;padding:1px 6px;opacity:.85;cursor:pointer;}
+  .reason-level.dim-tag:hover{opacity:1;text-decoration:underline;}
+
+  .renew-note{font-size:11px;color:var(--text-3);margin-top:1px;}
+
+  .reason-cell{min-width:0;}
+  .suggest-cell{min-width:0;}
+  .reason-text{color:var(--text-1);line-height:1.5;font-size:13px;}
+  .suggest-text{color:var(--text-2);font-size:12.5px;line-height:1.5;}
+  .gen-time{font-size:12px;color:var(--text-3);white-space:nowrap;}
+  .call-time-cell{font-size:12px;color:var(--text-3);white-space:nowrap;}
+  .link-btn{
+    background:none;border:none;color:var(--orange);font-size:12.5px;font-weight:600;cursor:pointer;padding:0;flex-shrink:0;
+  }
+  .link-btn:hover{color:var(--orange-dark);text-decoration:underline;}
+
+  .status{
+    display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;transition:background .15s,color .15s;
+    white-space:nowrap;
+  }
+  .status-pending{background:var(--amber-tint);color:var(--amber);}
+  .status-done{background:var(--green-tint);color:var(--green);}
+  .status-ignored{background:var(--grey-tint);color:var(--text-3);}
+
+  .row-ops{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .op-link{color:var(--orange);font-size:13px;font-weight:600;cursor:pointer;background:none;border:none;padding:0;white-space:nowrap;}
+  .op-link:hover{color:var(--orange-dark);text-decoration:underline;}
+  .op-link.secondary{color:var(--text-2);}
+  .op-link.secondary:hover{color:var(--text-1);}
+  .op-link.muted{color:var(--text-3);}
+  .op-link.muted:hover{color:var(--text-2);}
+
+  /* ---------- 学生详情弹窗 ---------- */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(31,35,41,.5);z-index:100;
+    align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:var(--card);border-radius:12px;max-width:920px;width:100%;
+    box-shadow:0 20px 60px rgba(20,24,31,.25);position:relative;
+  }
+  .modal-close{
+    position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;color:var(--text-2);cursor:pointer;font-size:16px;
+    background:none;border:none;
+  }
+  .modal-close:hover{background:var(--grey-tint);}
+  .modal-header{padding:24px 60px 16px 28px;border-bottom:1px solid var(--border);}
+  .modal-tabs{display:flex;gap:24px;padding:0 28px;border-bottom:1px solid var(--border);background:#fff;}
+  .modal-tab{padding:12px 0;font-size:14px;color:var(--text-2);border-bottom:2px solid transparent;cursor:pointer;user-select:none;}
+  .modal-tab.active{color:var(--orange);font-weight:700;border-bottom-color:var(--orange);}
+  .modal-body{padding:20px 28px 28px;display:flex;flex-direction:column;gap:16px;max-height:calc(100vh - 220px);overflow-y:auto;}
+  .modal-section-title{font-size:13.5px;font-weight:700;color:var(--text-1);margin-bottom:10px;}
+
+  /* ---------- 学生基本信息（弹窗头部）---------- */
+  .stu-id{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+  .stu-id .name{font-size:20px;font-weight:700;color:var(--text-1);}
+  .stu-id .phone{font-size:13px;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;}
+  .call-icon-btn{
+    width:24px;height:24px;border-radius:50%;background:var(--orange-tint);color:var(--orange-dark);border:none;
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;flex-shrink:0;
+  }
+  .call-icon-btn:hover{background:var(--orange);color:#fff;}
+  .stu-type-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:14px;}
+  .stu-type-badge.new{background:var(--blue-tint);color:var(--blue);}
+  .stu-type-badge.old{background:var(--grey-tint);color:var(--text-2);}
+  .stu-cls-badge{font-size:11.5px;color:var(--text-2);background:var(--grey-tint);padding:3px 10px;border-radius:14px;}
+  .course-info{font-size:12.5px;color:var(--text-2);line-height:1.7;}
+  .course-info .course-title{color:var(--text-1);font-weight:600;}
+
+  /* ---------- 重点表现时间轴 ---------- */
+  .timeline{display:flex;flex-direction:column;}
+  .tl-group{display:flex;gap:10px;padding:2px 0 16px;position:relative;}
+  .tl-group:last-child{padding-bottom:2px;}
+  .tl-rail{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:12px;}
+  .tl-dot{width:10px;height:10px;border-radius:50%;background:var(--text-3);margin-top:4px;flex-shrink:0;}
+  .tl-dot.l3, .tl-dot.l2{background:var(--red);}
+  .tl-dot.ghost-high, .tl-dot.ghost-low{background:var(--purple);}
+  .tl-dot.weak{background:var(--amber);}
+  .tl-dot.good{background:var(--green);}
+  .tl-line{flex:1;width:1px;background:var(--border);margin-top:2px;}
+  .tl-body{flex:1;min-width:0;}
+  .tl-time-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+  .tl-time{font-size:11.5px;color:var(--text-3);}
+  .tl-source-tag{font-size:10.5px;font-weight:600;color:var(--text-2);background:var(--grey-tint);border:1px solid var(--border);border-radius:10px;padding:1px 8px;}
+  .tl-case{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;transition:border-color .15s,background .15s;}
+  .tl-case:last-child{margin-bottom:0;}
+  .tl-case.active{border-color:var(--orange);background:var(--orange-tint);}
+  .tl-case-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+  .tl-evidence{font-size:12.5px;line-height:1.6;color:var(--text-1);margin-bottom:2px;}
+  .tl-group-foot{margin-top:8px;}
+
+  /* ---------- 反馈建议（结构化展示：同一区域内分沟通时机/沟通方式/沟通话术三段，不强调序号） ---------- */
+  .advice-basis{font-size:12px;color:var(--text-3);margin-bottom:8px;}
+  .tl-latest-badge{font-size:10px;font-weight:600;color:var(--orange-dark);background:var(--orange-tint);border-radius:10px;padding:1px 8px;}
+  .advice-group{border:1px solid var(--border);border-radius:10px;background:var(--grey-tint);padding:14px 16px;}
+  .advice-section{margin-bottom:10px;}
+  .advice-section:last-child{margin-bottom:0;}
+  .advice-section-title{font-size:13px;font-weight:700;color:var(--text-2);}
+  .advice-section .sc{font-size:13px;line-height:1.7;color:var(--text-1);}
+  .advice-icons{display:inline-flex;gap:6px;vertical-align:middle;margin:0 4px;}
+  .advice-icon-btn{
+    width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--border);color:var(--text-2);
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;
+  }
+  .advice-icon-btn:hover{border-color:var(--orange);color:var(--orange-dark);}
+  .modal-warn{
+    background:var(--red-tint);color:var(--red);font-size:12px;padding:10px 12px;border-radius:8px;
+    display:flex;gap:6px;align-items:flex-start;margin-top:8px;line-height:1.6;
+  }
+  .risk-feedback{margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .risk-feedback .rf-label{font-size:12px;color:var(--text-2);}
+  .rf-btn{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-2);}
+  .rf-btn:hover{background:var(--grey-tint);}
+  .rf-btn.active-yes{background:var(--green-tint);color:var(--green);border-color:var(--green);}
+  .rf-btn.active-no{background:var(--red-tint);color:var(--red);border-color:var(--red);}
+  .rf-done{font-size:12px;color:var(--text-3);}
+
+  /* ---------- 学情信息 · 学习数据 ---------- */
+  .archive-header{font-size:12px;color:var(--text-3);margin-bottom:10px;}
+  .archive-stats-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(140px,1fr));gap:10px;margin-bottom:12px;}
+  .archive-stat-tile{background:var(--grey-tint);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+  .archive-stat-tile .ast-label{font-size:11px;color:var(--text-3);margin-bottom:4px;}
+  .archive-stat-tile .ast-value{font-size:15px;font-weight:700;color:var(--text-1);}
+  .archive-stat-tile .ast-sub{font-size:10px;color:var(--text-3);margin-top:2px;}
+  .archive-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .archive-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:16px;}
+  .archive-badge.tone-red{background:var(--red-tint);color:var(--red);}
+  .archive-badge.tone-amber{background:var(--amber-tint);color:var(--amber);}
+  .archive-badge.tone-green{background:var(--green-tint);color:var(--green);}
+  .archive-badge.tone-grey{background:var(--grey-tint);color:var(--text-2);border:1px solid var(--border);}
+  .archive-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+  .archive-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .archive-table th{text-align:left;font-weight:600;color:var(--text-3);padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--grey-tint);}
+  .archive-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-1);white-space:nowrap;}
+  .archive-table tr:last-child td{border-bottom:none;}
+  .archive-op-link{color:var(--orange);cursor:pointer;margin-right:8px;font-size:12px;}
+  .archive-op-link:hover{text-decoration:underline;}
+
+  /* ---------- 跟进记录（重点表现 tab 内）---------- */
+  .sp-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .sp-quick-links{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;}
+  .sp-link{background:var(--orange-tint);border:1px solid transparent;color:var(--orange-dark);font-size:12px;font-weight:600;cursor:pointer;padding:5px 10px;border-radius:5px;white-space:nowrap;transition:background .15s,border-color .15s;}
+  .sp-link:hover{background:#fff;border-color:var(--orange);color:var(--orange-dark);}
+  .dc-followup-panel{display:none;margin-bottom:14px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--grey-tint);}
+  .dc-followup-panel.show{display:block;}
+  .dc-followup-panel .fu-panel-label{font-size:12px;color:var(--text-2);margin-bottom:6px;}
+  .dc-followup-panel textarea{
+    width:100%;min-height:64px;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12.5px;
+    font-family:inherit;resize:vertical;outline:none;
+  }
+  .dc-followup-panel textarea:focus{border-color:var(--orange);}
+  .dc-followup-panel .fu-panel-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;}
+  .fu-list-panel{border-top:1px solid var(--border);padding-top:12px;}
+  .fu-timeline{display:flex;flex-direction:column;}
+  .fu-tl-item{display:flex;gap:10px;}
+  .fu-tl-rail{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:12px;}
+  .fu-tl-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);margin-top:5px;flex-shrink:0;}
+  .fu-tl-line{flex:1;width:1px;background:var(--border);margin-top:2px;}
+  .fu-tl-item:last-child .fu-tl-line{display:none;}
+  .fu-tl-body{flex:1;min-width:0;padding-bottom:14px;}
+  .fu-tl-item:last-child .fu-tl-body{padding-bottom:0;}
+  .fu-tl-meta{font-size:11px;color:var(--text-3);margin-bottom:4px;}
+  .fu-tl-text{font-size:12.5px;color:var(--text-1);line-height:1.6;}
+  .fu-toggle-row{text-align:center;margin-top:8px;}
+  .fu-toggle-btn{background:none;border:none;color:var(--orange-dark);font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px;}
+  .fu-toggle-btn:hover{text-decoration:underline;}
+  .modal-empty-state{text-align:center;padding:36px 10px;color:var(--text-3);font-size:13px;}
+
+  /* ---------- Toast ---------- */
+  .toast-container{position:fixed;right:24px;bottom:24px;display:flex;flex-direction:column;gap:10px;z-index:200;}
+  .toast{
+    display:flex;align-items:center;gap:8px;background:#1F2329;color:#fff;font-size:13px;
+    padding:11px 16px;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.2);
+    opacity:0;transform:translateY(8px);transition:opacity .22s, transform .22s;max-width:320px;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast .tdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .toast.success .tdot{background:var(--green);}
+  .toast.warn .tdot{background:var(--red);}
+  .toast.info .tdot{background:var(--blue);}
+
+  @media (prefers-reduced-motion: reduce){
+    .list-row, .toast, .status{transition:none;}
+    .ping{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-logo"><span class="mark">班</span>班课管理系统</div>
+      <nav class="side-nav">
+        <div class="side-item" data-toast="我的">我的</div>
+        <div class="side-item" data-toast="客户管理">客户管理</div>
+        <div class="side-item" data-toast="班级管理">班级管理</div>
+        <div class="side-item" data-toast="直播老师工作台">直播老师工作台</div>
+        <div class="side-group active">
+          <div class="side-item">班主任工作台</div>
+          <div class="side-sub">
+            <div class="side-sub-item active">一站式工作台</div>
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar-foot">v2.1 原型演示（筛选与列表支持多维度重点表现展示）</div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+
+      <div class="topbar">
+        <div class="breadcrumb">班主任工作台 <span>/</span> <b>一站式工作台</b></div>
+        <div class="topbar-right">
+          <div class="icon-btn" data-toast="消息通知">🔔</div>
+          <div class="icon-btn" data-toast="待办事项">🗒</div>
+          <div class="avatar">吴</div>
+          <div class="user-name">吴立明</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active new-badge">重点关注</div>
+        <div class="tab" data-toast="工作台">工作台</div>
+        <div class="tab" data-toast="课后练习">课后练习</div>
+        <div class="tab" data-toast="正价课监课">正价课监课</div>
+        <div class="tab" data-toast="专项课监课">专项课监课</div>
+        <div class="tab" data-toast="班级数据">班级数据</div>
+        <div class="tab" data-toast="临调学员">临调学员</div>
+        <div class="tab" data-toast="转介绍">转介绍</div>
+      </div>
+
+      <div class="page">
+
+        <!-- Overview -->
+        <div class="overview">
+          <div class="ov-card">
+            <div class="label"><span class="dot orange"></span>重点关注学生数</div>
+            <div class="num" id="statTotal">--</div>
+            <div class="sub" id="statTotalSub">覆盖 -- 个班级</div>
+          </div>
+          <div class="ov-card accent-risk">
+            <div class="label"><span class="dot red"></span>风险待处理</div>
+            <div class="num" id="statRisk">--</div>
+            <div class="sub" id="statRiskSub">含 -- 例高风险</div>
+          </div>
+          <div class="ov-card accent-orange">
+            <div class="label"><span class="dot orange"></span>持续薄弱</div>
+            <div class="num" id="statWeak">--</div>
+            <div class="sub">连续 3 次及以上待提升</div>
+          </div>
+          <div class="ov-card accent-blue">
+            <div class="label"><span class="dot blue"></span>今日新增</div>
+            <div class="num" id="statNew">--</div>
+            <div class="sub">较昨日 +2</div>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <input type="text" id="fSearch" placeholder="输入学生姓名，实时筛选">
+          <select id="fClass">
+            <option value="">全部班级</option>
+            <option value="八上9-1班">八上9-1班</option>
+            <option value="八上8-2班">八上8-2班</option>
+          </select>
+          <div class="ms-filter" id="msPerf">
+            <button type="button" class="ms-trigger" id="msPerfTrigger">全部重点表现</button>
+            <div class="ms-panel" id="msPerfPanel">
+              <div class="ms-group-label">作业表现</div>
+              <label class="ms-option"><input type="checkbox" value="perf-4star">四星待提升</label>
+              <label class="ms-option"><input type="checkbox" value="perf-5star">五星佳作</label>
+              <label class="ms-option"><input type="checkbox" value="perf-select">精选佳作</label>
+              <div class="ms-group-label">学习行为（即将上线）</div>
+              <label class="ms-option" style="opacity:.45;cursor:not-allowed;"><input type="checkbox" disabled>敬请期待</label>
+              <div class="ms-group-label">学情</div>
+              <label class="ms-option"><input type="checkbox" value="situ-subskill-up">单次能力提升</label>
+              <label class="ms-option"><input type="checkbox" value="situ-subskill-down">单次能力下降</label>
+              <label class="ms-option"><input type="checkbox" value="situ-weak">持续薄弱</label>
+              <label class="ms-option"><input type="checkbox" value="situ-good">持续优秀</label>
+              <div class="ms-group-label">风险</div>
+              <label class="ms-option"><input type="checkbox" value="risk-l2">低风险</label>
+              <label class="ms-option"><input type="checkbox" value="risk-l3">高风险</label>
+              <label class="ms-option"><input type="checkbox" value="ghost">疑似AI代写</label>
+              <div class="ms-actions">
+                <button type="button" class="ms-clear" id="msPerfClear">清空</button>
+                <button type="button" class="ms-done" id="msPerfDone">完成</button>
+              </div>
+            </div>
+          </div>
+          <select id="fGenTime">
+            <option value="">重点关注生成时间：不限</option>
+            <option value="today">今天</option>
+            <option value="3d">近3天</option>
+            <option value="7d">近7天</option>
+            <option value="custom">自定义范围</option>
+          </select>
+          <div class="custom-range" id="customRangeBox" style="display:none;">
+            <input type="date" id="fGenFrom"><span>至</span><input type="date" id="fGenTo">
+          </div>
+          <select id="fStatus">
+            <option value="">全部处理状态</option>
+            <option value="pending" selected>待处理</option>
+            <option value="done">已处理</option>
+            <option value="ignored">已忽略</option>
+          </select>
+          <div class="filter-spacer"></div>
+          <div class="result-count">符合筛选条件的共 <b id="resultCount">--</b> 位学生</div>
+          <button class="btn btn-ghost" id="btnClearFilter">清空筛选条件</button>
+          <button class="btn btn-ghost" id="btnExport">导出</button>
+        </div>
+
+        <!-- Task list -->
+        <div class="list-panel">
+          <div class="list-head">
+            <div>学员</div>
+            <div>班级</div>
+            <div>重点表现</div>
+            <div>关注原因</div>
+            <div>建议反馈</div>
+            <div>生成时间</div>
+            <div>最近电话联系时间</div>
+            <div>处理状态</div>
+            <div>操作</div>
+          </div>
+          <div id="listBody"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 学生详情弹窗：学生基本信息 + 重点表现tab（含反馈建议、跟进记录） + 学情信息tab -->
+  <div class="modal-overlay" id="stuModalOverlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeStudentModal()">✕</button>
+      <div class="modal-header">
+        <div class="stu-id">
+          <span class="name" id="mStuName"></span>
+          <span class="phone" id="mStuPhone"></span>
+          <button class="call-icon-btn" title="拨打电话" onclick="contactVia('phone')">📞</button>
+          <span class="stu-type-badge" id="mStuTypeBadge"></span>
+          <span class="stu-cls-badge" id="mStuClsBadge"></span>
+        </div>
+        <div class="course-info">
+          <div class="course-title" id="mCourseTitle"></div>
+          <div id="mCourseSchedule"></div>
+        </div>
+      </div>
+      <div class="modal-tabs">
+        <div class="modal-tab active" id="mTabBtnPerf" onclick="switchModalTab('perf')">重点表现</div>
+        <div class="modal-tab" id="mTabBtnArchive" onclick="switchModalTab('archive')">学情信息</div>
+      </div>
+      <div class="modal-body">
+        <div id="mPanelPerf">
+          <div class="modal-section-title">重点表现</div>
+          <div class="timeline" id="mTlBox"></div>
+          <div class="modal-section-title" style="margin-top:18px;">反馈建议</div>
+          <div class="advice-basis" id="mAdviceBasis"></div>
+          <div id="mFeedbackBox"></div>
+          <div class="modal-section-title" style="margin-top:18px;">跟进记录</div>
+          <div class="sp-toolbar">
+            <div class="sp-quick-links">
+              <button class="sp-link" data-toast="查看企微沟通记录">查看企微沟通记录</button>
+              <button class="sp-link" data-toast="查看通话记录">查看通话记录</button>
+            </div>
+            <button class="btn btn-primary btn-sm" id="mFuAddBtn" onclick="openFollowupPanel()">+ 添加跟进记录</button>
+          </div>
+          <div class="dc-followup-panel" id="mFuPanel">
+            <div class="fu-panel-label">跟进内容</div>
+            <textarea id="mFuText" placeholder="请输入本次跟进的沟通内容..."></textarea>
+            <div class="fu-panel-actions">
+              <button class="btn btn-ghost" onclick="closeFollowupPanel()">取消</button>
+              <button class="btn btn-primary" onclick="submitStudentFollowup()">提交</button>
+            </div>
+          </div>
+          <div class="fu-list-panel" id="mFuList"></div>
+        </div>
+        <div id="mPanelArchive" style="display:none;">
+          <div id="mArchiveBox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+<script src="重点关注-shared.js"></script>
+<script>
+
+  const filters = { q:"", cls:"", perf:new Set(), status:"pending", genTime:"", genFrom:"", genTo:"" };
+
+  function computeStats(){
+    const total = new Set(data.map(d => d.name + '|' + d.cls)).size;
+    const classes = new Set(data.map(d => d.cls));
+    const riskPending = data.filter(d => d.category === "risk" && d.status === "pending").length;
+    const l3Pending = data.filter(d => d.level === "l3" && d.status === "pending").length;
+    const weakCount = data.filter(d => d.category === "weak").length;
+    const newCount = data.filter(d => d.isNew).length;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statTotalSub').textContent = `覆盖 ${classes.size} 个班级`;
+    document.getElementById('statRisk').textContent = riskPending;
+    document.getElementById('statRiskSub').textContent = `含 ${l3Pending} 例高风险`;
+    document.getElementById('statWeak').textContent = weakCount;
+    document.getElementById('statNew').textContent = newCount;
+  }
+
+  function inGenTimeRange(ts){
+    if(!filters.genTime) return true;
+    if(filters.genTime === 'today') return ts >= tsOf(1);
+    if(filters.genTime === '3d') return ts >= tsOf(3);
+    if(filters.genTime === '7d') return ts >= tsOf(7);
+    if(filters.genTime === 'custom'){
+      const from = filters.genFrom ? new Date(filters.genFrom + 'T00:00:00').getTime() : -Infinity;
+      const to = filters.genTo ? new Date(filters.genTo + 'T23:59:59').getTime() : Infinity;
+      return ts >= from && ts <= to;
+    }
+    return true;
+  }
+
+  function getFiltered(){
+    return data
+      .map((row, i) => ({ row, i }))
+      .filter(({row}) => {
+        if(filters.q && !row.name.includes(filters.q)) return false;
+        if(filters.cls && row.cls !== filters.cls) return false;
+        if(filters.perf.size){
+          const rowKeys = [row.filterKey, ...(row.secondaryDims || []).map(d => d.filterKey)];
+          if(!rowKeys.some(k => filters.perf.has(k))) return false;
+        }
+        if(filters.status && row.status !== filters.status) return false;
+        if(!inGenTimeRange(tsOf(row.daysAgo))) return false;
+        return true;
+      });
+  }
+
+  // 学生去重：列表本质是"学生列表"而非"case列表"，见 PRD 4.3
+  function getGroupedFiltered(){
+    const filtered = getFiltered();
+    const groups = new Map();
+    filtered.forEach(({i}) => {
+      const key = data[i].name + '|' + data[i].cls;
+      if(!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(i);
+    });
+    const result = [];
+    groups.forEach((indices) => {
+      indices.sort((a, b) => priorityOf(b) - priorityOf(a));
+      result.push({ primaryIndex: indices[0] });
+    });
+    result.sort((a, b) => priorityOf(b.primaryIndex) - priorityOf(a.primaryIndex));
+    return result;
+  }
+
+  // 学生详情由独立页面收编为列表页内嵌弹窗，见 openStudentModal
+  function openStudentDetail(i){ openStudentModal(i); }
+
+  function renderRowOps(i){
+    const row = data[i];
+    if(row.status === "pending"){
+      return `
+        <button class="op-link" onclick="openStudentDetail(${i})">跟进记录</button>
+        <button class="op-link secondary" onclick="quickIgnore(${i})">忽略</button>`;
+    }
+    return `<button class="op-link muted" onclick="quickUndo(${i})">撤销</button>`;
+  }
+
+  function renderRow(primaryIndex){
+    const i = primaryIndex;
+    const row = data[i];
+    const st = statusMap[row.status];
+    const sev = sevClassOf(row);
+    const tags = getAllTagsForStudent(row.name, row.cls);
+    const [primaryTag, ...restTags] = tags;
+    const lastCallTs = computeLastCallTs(row.name, row.cls);
+    return `
+      <div class="list-row ${sev} ${row.level === 'l3' ? 'risk-l3' : ''} ${row.status === 'done' ? 'done' : ''}" id="card-${i}">
+        <div class="stu-cell" onclick="openStudentDetail(${i})">
+          <div class="stu-name">${row.name}</div>
+        </div>
+        <div class="cls-cell">${row.cls}</div>
+        <div class="lvl-cell">
+          ${row.urgent ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
+          <span class="reason-level lvl-${primaryTag.level}" style="cursor:pointer;" onclick="event.stopPropagation();openStudentDetail(${primaryTag.idx})">${primaryTag.label}</span>
+          ${restTags.length ? `
+          <div class="dim-tag-row">
+            ${restTags.map(t => `<span class="reason-level dim-tag lvl-${t.level}" onclick="event.stopPropagation();openStudentDetail(${t.idx})">${t.label}</span>`).join("")}
+          </div>` : ``}
+        </div>
+        <div class="reason-cell">
+          <div class="reason-text">${row.reason}</div>
+        </div>
+        <div class="suggest-cell">
+          <div class="suggest-text">${suggestSummaryOf(row)}</div>
+          <button class="link-btn" onclick="openStudentDetail(${i})">查看详情 →</button>
+        </div>
+        <div class="gen-time">${fmtTime(tsOf(row.daysAgo))}</div>
+        <div class="call-time-cell">${lastCallTs ? fmtTime(lastCallTs) : '暂无联系记录'}</div>
+        <div>
+          <span class="status ${st.cls}" id="status-${i}">${st.label}</span>
+        </div>
+        <div class="row-ops" id="ops-${i}">${renderRowOps(i)}</div>
+      </div>`;
+  }
+
+  function render(){
+    computeStats();
+    const groups = getGroupedFiltered();
+    document.getElementById('resultCount').textContent = groups.length;
+    const body = document.getElementById('listBody');
+    if(groups.length === 0){
+      body.innerHTML = `<div class="empty-state">没有符合筛选条件的学生，试试调整筛选条件</div>`;
+      return;
+    }
+    body.innerHTML = groups.map(g => renderRow(g.primaryIndex)).join("");
+  }
+
+  function quickIgnore(i){
+    data[i].status = "ignored";
+    render();
+    showToast(`已忽略 ${data[i].name} 的提醒`, "warn");
+  }
+  function quickUndo(i){
+    data[i].status = "pending";
+    render();
+    showToast(`已撤销 ${data[i].name} 的处理状态，此前跟进记录仍保留`, "info");
+  }
+
+  // ==================================================================
+  // 学生详情弹窗（原独立页面「重点关注-学生详情.html」收编为内嵌弹窗）
+  // ==================================================================
+  let modalStudentName = null;
+  let modalStudentCls = null;
+  let modalCases = [];
+  // “反馈建议”固定取该生全部case中触发时间最新的一条（同一时刻多条取优先级最高者），
+  // 不再随老师点击时间轴上哪个case而切换——避免每条case各自维护一套反馈建议、老师需逐条判断参考哪条的复杂度（见 PRD 4.7节，2026-09-15）
+  let modalSelectedIndex = null;
+  let fuListExpanded = false;
+  const FU_COLLAPSE_THRESHOLD = 2;
+
+  function openStudentModal(i){
+    const row = data[i];
+    modalStudentName = row.name;
+    modalStudentCls = row.cls;
+    modalCases = getAllCasesForStudent(modalStudentName, modalStudentCls);
+    modalSelectedIndex = pickFeedbackCaseIdx(modalCases);
+
+    fuListExpanded = false;
+    document.getElementById('mFuText').value = '';
+    const hasFollowUps = modalCases.some(({r}) => (r.followUps || []).length > 0);
+    document.getElementById('mFuPanel').classList.toggle('show', !hasFollowUps);
+    document.getElementById('mFuAddBtn').style.display = hasFollowUps ? '' : 'none';
+    switchModalTab('perf');
+
+    if(!modalCases.length){
+      document.getElementById('mPanelPerf').innerHTML = `<div class="modal-empty-state">未找到该学生的重点关注记录</div>`;
+    } else {
+      renderModalHeader();
+      renderModalTimeline();
+      renderModalFeedback();
+      renderFuList();
+    }
+    document.getElementById('stuModalOverlay').classList.add('show');
+  }
+
+  function closeStudentModal(){
+    document.getElementById('stuModalOverlay').classList.remove('show');
+    render();
+  }
+  document.getElementById('stuModalOverlay').addEventListener('click', (e) => {
+    if(e.target.id === 'stuModalOverlay') closeStudentModal();
+  });
+
+  function switchModalTab(tab){
+    const isPerf = tab === 'perf';
+    document.getElementById('mTabBtnPerf').classList.toggle('active', isPerf);
+    document.getElementById('mTabBtnArchive').classList.toggle('active', !isPerf);
+    document.getElementById('mPanelPerf').style.display = isPerf ? '' : 'none';
+    document.getElementById('mPanelArchive').style.display = isPerf ? 'none' : '';
+    if(!isPerf) renderModalArchive();
+  }
+
+  function contactVia(method){
+    const label = method === 'phone' ? '外呼' : '企微沟通';
+    showToast(`已为 ${modalStudentName} 调起${label}（原型演示，暂未接通真实通道）`, "info");
+  }
+
+  function renderModalHeader(){
+    const first = data[modalCases[0].idx];
+    document.getElementById('mStuName').textContent = modalStudentName;
+    document.getElementById('mStuPhone').textContent = maskPhone(first.phone);
+    document.getElementById('mStuClsBadge').textContent = modalStudentCls;
+    const profile = computeStudentProfile(modalStudentName, modalStudentCls);
+    const badge = document.getElementById('mStuTypeBadge');
+    badge.textContent = profile.studentType;
+    badge.className = 'stu-type-badge ' + (profile.studentType === '新生' ? 'new' : 'old');
+    document.getElementById('mCourseTitle').textContent = profile.courseTitle;
+    document.getElementById('mCourseSchedule').textContent = profile.schedule;
+  }
+
+  // 按 assignmentTitle 分组聚合——同一份作业触发的多个 case 视为时间轴上的同一个时间点，并展示重点表现来源作业
+  function renderModalTimeline(){
+    const box = document.getElementById('mTlBox');
+    const groups = [];
+    const groupIndexByTitle = new Map();
+    modalCases.forEach(item => {
+      const title = item.r.assignmentTitle;
+      if(title && groupIndexByTitle.has(title)){
+        groups[groupIndexByTitle.get(title)].items.push(item);
+      } else {
+        const g = { title, items:[item] };
+        groups.push(g);
+        if(title) groupIndexByTitle.set(title, groups.length - 1);
+      }
+    });
+
+    box.innerHTML = groups.map((g, gi) => {
+      const isLastGroup = gi === groups.length - 1;
+      const groupTime = fmtTime(tsOf(g.items[0].r.daysAgo));
+      const dotLevel = g.items.reduce((best, cur) =>
+        (casePriority[cur.r.level] ?? 0) > (casePriority[best] ?? 0) ? cur.r.level : best
+      , g.items[0].r.level);
+      const groupSourceType = g.items.map(({r}) => r.sourceType).find(Boolean);
+      const sourceTagHtml = groupSourceType ? `<span class="tl-source-tag">${groupSourceType}</span>` : ``;
+      const casesHtml = g.items.map(({r, idx}) => {
+        const isActive = idx === modalSelectedIndex;
+        const primaryCard = `
+        <div class="tl-case ${isActive ? 'active' : ''}">
+          <div class="tl-case-top">
+            ${isActive ? `<span class="tl-latest-badge">反馈建议依据</span>` : ``}
+            ${r.urgent ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
+            <span class="reason-level lvl-${r.level}">${r.perfLabel}</span>
+          </div>
+          <div class="tl-evidence">${r.evidence}</div>
+          ${r.renewNote ? `<div class="renew-note">${r.renewNote}</div>` : ``}
+        </div>`;
+        const secondaryCards = (r.secondaryDims || []).map(d => `
+        <div class="tl-case ${isActive ? 'active' : ''}">
+          <div class="tl-case-top">
+            ${isActive ? `<span class="tl-latest-badge">反馈建议依据</span>` : ``}
+            <span class="reason-level lvl-${d.level}">${d.perfLabel}</span>
+          </div>
+          <div class="tl-evidence">${d.reason}</div>
+        </div>`).join("");
+        return primaryCard + secondaryCards;
+      }).join("");
+      const footHtml = g.title
+        ? `<div class="tl-group-foot"><button class="link-btn" onclick="openHomeworkDetail('${g.title}')">查看「${g.title}」作业详情 →</button></div>`
+        : '';
+      return `
+      <div class="tl-group">
+        <div class="tl-rail">
+          <div class="tl-dot ${dotLevel}"></div>
+          ${isLastGroup ? '' : '<div class="tl-line"></div>'}
+        </div>
+        <div class="tl-body">
+          <div class="tl-time-row"><span class="tl-time">${groupTime}</span>${sourceTagHtml}</div>
+          ${casesHtml}
+          ${footHtml}
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+
+  // 沟通方式建议文案里推荐的是电话还是文字/企微，据此二选一展示对应图标；建议当面沟通、或未明确提及具体渠道时不展示图标
+  function channelAdviceIcon(text){
+    if(!text) return '';
+    if(text.includes('当面')) return '';
+    if(text.includes('电话')) return `<button class="advice-icon-btn" onclick="contactVia('phone')" title="拨打电话">📞</button>`;
+    if(text.includes('文字') || text.includes('企微') || text.includes('消息')) return `<button class="advice-icon-btn" onclick="contactVia('wechat')" title="企微沟通">💬</button>`;
+    return '';
+  }
+
+  // 反馈建议：结构化展示为3个模块——沟通时机建议/沟通方式建议（末尾附对应图标）/沟通话术策略建议
+  // 展示内容固定取该生 pickFeedbackCaseIdx() 选出的最新触发case，不随时间轴点击切换（见 modalSelectedIndex 声明处注释）
+  function renderModalFeedback(){
+    const row = data[modalSelectedIndex];
+    document.getElementById('mAdviceBasis').textContent =
+      `基于该生最新一次触发生成（${row.perfLabel} · ${fmtTime(tsOf(row.daysAgo))}）；若该生此后再次触发新case，下次打开将自动更新为最新一条`;
+    const timing = row.timingAdvice || '暂无沟通时机建议';
+    const channel = row.channelAdvice || '暂无沟通方式建议';
+    const script = row.scriptAdvice || '暂无沟通话术策略建议';
+    const channelIcon = channelAdviceIcon(row.channelAdvice);
+    let html = `
+      <div class="advice-group">
+        <div class="advice-section">
+          <span class="advice-section-title">沟通时机建议：</span><span class="sc">${timing}</span>
+        </div>
+        <div class="advice-section">
+          <span class="advice-section-title">沟通方式建议：</span><span class="sc">${channel}</span>${channelIcon ? `<span class="advice-icons">${channelIcon}</span>` : ''}
+        </div>
+        <div class="advice-section">
+          <span class="advice-section-title">沟通话术策略建议：</span><span class="sc">${script}</span>
+        </div>
+      </div>`;
+    if(row.warn){
+      html += `<div class="modal-warn">⚠ ${row.warn}</div>`;
+    }
+    if(row.category === "risk" && row.subtype === "emotion"){
+      html += `
+      <div class="risk-feedback" id="mRiskFeedback">
+        <span class="rf-label">该风险判断是否准确？</span>
+        <button class="rf-btn" onclick="submitRiskFeedback(${modalSelectedIndex}, true)">准确</button>
+        <button class="rf-btn" onclick="submitRiskFeedback(${modalSelectedIndex}, false)">不准确</button>
+      </div>`;
+    }
+    document.getElementById('mFeedbackBox').innerHTML = html;
+    renderRiskFeedbackState(row);
+  }
+  function renderRiskFeedbackState(row){
+    const box = document.getElementById('mRiskFeedback');
+    if(!box) return;
+    if(row.riskFeedback === undefined){
+      box.querySelectorAll('.rf-btn').forEach(b => b.classList.remove('active-yes','active-no'));
+      return;
+    }
+    box.innerHTML = `<span class="rf-done">${row.riskFeedback ? "✓ 已反馈：判断准确" : "✓ 已反馈：判断不准确，将用于后续规则校准"}</span>`;
+  }
+  function submitRiskFeedback(i, accurate){
+    const row = data[i];
+    row.riskFeedback = accurate;
+    renderRiskFeedbackState(row);
+    showToast(accurate ? "已记录：判断准确（不影响该任务处理状态）" : "已记录：判断不准确，感谢反馈（不影响该任务处理状态）", "info");
+  }
+
+  function openHomeworkDetail(title){
+    showToast("「作业详情页」为现有线上页面（非新增），本地demo暂未接入真实跳转链接", "info");
+  }
+
+  function renderModalArchive(){
+    const arc = computeArchiveData(modalStudentName, modalStudentCls);
+    const box = document.getElementById('mArchiveBox');
+    box.innerHTML = `
+      <div class="archive-header">近${arc.rows.length}节课学习数据 · ${modalStudentCls}</div>
+      <div class="archive-stats-grid">
+        ${arc.stats.map(s => `
+          <div class="archive-stat-tile">
+            <div class="ast-label">${s.label}</div>
+            <div class="ast-value">${s.value}</div>
+            ${s.sub ? `<div class="ast-sub">${s.sub}</div>` : ``}
+          </div>`).join("")}
+      </div>
+      <div class="archive-badges">
+        ${arc.badges.map(b => `<span class="archive-badge tone-${b.tone}">${b.label}</span>`).join("")}
+      </div>
+      <div class="archive-table-wrap">
+        <table class="archive-table">
+          <thead>
+            <tr>
+              <th>日期</th><th>小节名称</th><th>小节类型</th><th>是否临时调班</th><th>出席</th><th>出席时长</th><th>回放时长</th><th>作业提交</th><th>作业星级</th><th>课中已答题</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${arc.rows.map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td>${r.title}</td>
+              <td>${r.type}</td>
+              <td>${r.swapped}</td>
+              <td>${r.attended ? "是" : "否"}</td>
+              <td>${r.attended ? r.attendMin + "分钟" : "—"}</td>
+              <td>${r.playbackMin ? r.playbackMin + "分钟" : "—"}</td>
+              <td>${r.submitted ? "已提交" : "未提交"}</td>
+              <td>${r.star}</td>
+              <td>${r.answered}</td>
+              <td>
+                <span class="archive-op-link" onclick="openHomeworkDetail('${r.title}')">课节学习报告</span>
+                ${r.star === "★★★★★" ? `<span class="archive-op-link" onclick="showToast('「哎哟，我上榜啦」为独立分享页，超出本次原型范围，仅演示入口','info')">哎哟，我上榜啦</span>` : ``}
+              </td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  // ---- 跟进记录面板：学生级别通用入口，一次操作可覆盖该学生名下多条重点表现 ----
+  function openFollowupPanel(){
+    document.getElementById('mFuPanel').classList.add('show');
+    document.getElementById('mFuAddBtn').style.display = 'none';
+  }
+  function closeFollowupPanel(){
+    document.getElementById('mFuPanel').classList.remove('show');
+    document.getElementById('mFuAddBtn').style.display = '';
+  }
+  function submitStudentFollowup(){
+    const text = document.getElementById('mFuText').value.trim();
+    if(!text){
+      showToast("请先填写跟进内容再提交", "warn");
+      return;
+    }
+    const entry = { text, by:"吴立明", ts: Date.now() };
+    modalCases.forEach(({r}) => {
+      r.followUps.push(entry);
+      if(r.status === 'pending') r.status = 'done';
+    });
+    document.getElementById('mFuText').value = '';
+    closeFollowupPanel();
+    renderFuList();
+    showToast(`已为 ${modalStudentName} 提交跟进记录，相关待处理事项已流转为已处理`, "success");
+  }
+
+  function renderFuList(){
+    const box = document.getElementById('mFuList');
+    const seen = new Set();
+    const entries = [];
+    modalCases.forEach(({r}) => (r.followUps || []).forEach(f => {
+      if(!seen.has(f)){ seen.add(f); entries.push(f); }
+    }));
+    entries.sort((a, b) => b.ts - a.ts);
+    if(!entries.length){
+      box.innerHTML = `<div class="modal-empty-state">暂无跟进记录</div>`;
+      return;
+    }
+    const collapsible = entries.length > FU_COLLAPSE_THRESHOLD;
+    const shown = (collapsible && !fuListExpanded) ? entries.slice(0, FU_COLLAPSE_THRESHOLD) : entries;
+    const itemsHtml = shown.map(f => `
+      <div class="fu-tl-item">
+        <div class="fu-tl-rail">
+          <div class="fu-tl-dot"></div>
+          <div class="fu-tl-line"></div>
+        </div>
+        <div class="fu-tl-body">
+          <div class="fu-tl-meta">${fmtTime(f.ts)} · ${f.by}</div>
+          <div class="fu-tl-text">${f.text}</div>
+        </div>
+      </div>`).join("");
+    const toggleHtml = collapsible
+      ? `<div class="fu-toggle-row"><button class="fu-toggle-btn" onclick="toggleFuList()">${fuListExpanded ? "收起" : `展开全部 ${entries.length} 条跟进记录`}</button></div>`
+      : '';
+    box.innerHTML = `<div class="fu-timeline">${itemsHtml}</div>${toggleHtml}`;
+  }
+
+  function toggleFuList(){
+    fuListExpanded = !fuListExpanded;
+    renderFuList();
+  }
+
+  // ---- Filter bar wiring ----
+  document.getElementById('fSearch').addEventListener('input', (e) => { filters.q = e.target.value.trim(); render(); });
+  document.getElementById('fClass').addEventListener('change', (e) => { filters.cls = e.target.value; render(); });
+  document.getElementById('fStatus').addEventListener('change', (e) => { filters.status = e.target.value; render(); });
+  document.getElementById('fGenTime').addEventListener('change', (e) => {
+    filters.genTime = e.target.value;
+    document.getElementById('customRangeBox').style.display = (filters.genTime === 'custom') ? 'flex' : 'none';
+    if(filters.genTime !== 'custom'){ filters.genFrom = ''; filters.genTo = ''; }
+    render();
+  });
+  document.getElementById('fGenFrom').addEventListener('change', (e) => { filters.genFrom = e.target.value; render(); });
+  document.getElementById('fGenTo').addEventListener('change', (e) => { filters.genTo = e.target.value; render(); });
+
+  // ---- 重点表现多选筛选（同一学生可能同时命中多个维度，见 PRD 4.3/4.6） ----
+  const msPerf = document.getElementById('msPerf');
+  const msPerfTrigger = document.getElementById('msPerfTrigger');
+  const msPerfPanel = document.getElementById('msPerfPanel');
+  const msPerfCheckboxes = () => Array.from(msPerfPanel.querySelectorAll('input[type="checkbox"]:not([disabled])'));
+
+  function updateMsPerfTrigger(){
+    const n = filters.perf.size;
+    msPerfTrigger.textContent = n === 0 ? '全部重点表现' : `已选重点表现（${n}）`;
+    msPerfTrigger.classList.toggle('has-selection', n > 0);
+  }
+  msPerfTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    msPerfPanel.classList.toggle('show');
+  });
+  msPerfCheckboxes().forEach(cb => {
+    cb.addEventListener('change', () => {
+      if(cb.checked) filters.perf.add(cb.value);
+      else filters.perf.delete(cb.value);
+      updateMsPerfTrigger();
+      render();
+    });
+  });
+  document.getElementById('msPerfClear').addEventListener('click', (e) => {
+    e.stopPropagation();
+    filters.perf.clear();
+    msPerfCheckboxes().forEach(cb => cb.checked = false);
+    updateMsPerfTrigger();
+    render();
+  });
+  document.getElementById('msPerfDone').addEventListener('click', (e) => {
+    e.stopPropagation();
+    msPerfPanel.classList.remove('show');
+  });
+  document.addEventListener('click', (e) => {
+    if(!msPerf.contains(e.target)) msPerfPanel.classList.remove('show');
+  });
+
+  document.getElementById('btnClearFilter').addEventListener('click', () => {
+    filters.q = ""; filters.cls = ""; filters.perf = new Set(); filters.status = "pending";
+    filters.genTime = ""; filters.genFrom = ""; filters.genTo = "";
+    document.getElementById('fSearch').value = "";
+    document.getElementById('fClass').value = "";
+    msPerfCheckboxes().forEach(cb => cb.checked = false);
+    updateMsPerfTrigger();
+    document.getElementById('fStatus').value = "pending";
+    document.getElementById('fGenTime').value = "";
+    document.getElementById('customRangeBox').style.display = 'none';
+    render();
+    showToast("已清空筛选条件", "info");
+  });
+
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const count = getGroupedFiltered().length;
+    showToast(`已导出 ${count} 条记录`, "success");
+  });
+
+  // ---- Non-functional nav / tabs feedback ----
+  document.querySelectorAll('[data-toast]').forEach(el => {
+    el.addEventListener('click', () => {
+      showToast(`「${el.dataset.toast}」为原型演示，暂未开放`, "info");
+    });
+  });
+
+  render();
+
+</script>
+
+</body>
+</html>
