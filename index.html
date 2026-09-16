@@ -121,7 +121,10 @@
   .ov-card{
     background:var(--card);border-radius:10px;padding:20px 22px;
     box-shadow:0 1px 2px rgba(20,24,31,.04);border:1px solid var(--border);
+    cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s;
   }
+  .ov-card:hover{border-color:var(--orange);box-shadow:0 4px 14px rgba(255,106,57,.14);}
+  .ov-card.active{border-color:var(--orange);background:var(--orange-tint);box-shadow:0 4px 14px rgba(255,106,57,.18);}
   .ov-card .label{font-size:13px;color:var(--text-2);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
   .ov-card .num{font-size:30px;font-weight:700;line-height:1;color:var(--text-1);transition:color .15s;}
   .ov-card.accent-risk .num{color:var(--red);}
@@ -202,7 +205,7 @@
     background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;
   }
   .list-head, .list-row{
-    display:grid;grid-template-columns:104px 80px 150px 1fr 140px 140px 140px 76px 128px;gap:12px;align-items:center;
+    display:grid;grid-template-columns:104px 80px 70px 150px 1fr 140px 140px 140px 76px 128px;gap:12px;align-items:center;
   }
   .list-head{
     padding:11px 20px;background:var(--grey-tint);border-bottom:1px solid var(--border);
@@ -229,6 +232,11 @@
   .stu-name:hover{color:var(--orange-dark);text-decoration:underline;}
   .cls-cell{font-size:12.5px;color:var(--text-2);}
 
+  .tier-cell{display:flex;}
+  .tier-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;display:inline-block;white-space:nowrap;}
+  .tier-badge.tier-a{background:var(--blue-tint);color:var(--blue);}
+  .tier-badge.tier-b{background:var(--purple-tint);color:var(--purple);}
+
   .lvl-cell{display:flex;flex-direction:column;align-items:flex-start;gap:5px;}
   .urgent-badge{
     display:inline-flex;align-items:center;gap:5px;background:var(--red);color:#fff;font-size:11px;font-weight:700;
@@ -244,7 +252,7 @@
   }
   .reason-level{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;white-space:nowrap;}
   .lvl-l3, .lvl-l2{background:var(--red-tint);color:var(--red);}
-  .lvl-ghost-high, .lvl-ghost-low{background:var(--purple-tint);color:var(--purple);}
+  .lvl-ghost{background:var(--purple-tint);color:var(--purple);}
   .lvl-weak{background:var(--amber-tint);color:var(--amber);}
   .lvl-good{background:var(--green-tint);color:var(--green);}
 
@@ -327,7 +335,7 @@
   .tl-rail{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:12px;}
   .tl-dot{width:10px;height:10px;border-radius:50%;background:var(--text-3);margin-top:4px;flex-shrink:0;}
   .tl-dot.l3, .tl-dot.l2{background:var(--red);}
-  .tl-dot.ghost-high, .tl-dot.ghost-low{background:var(--purple);}
+  .tl-dot.ghost{background:var(--purple);}
   .tl-dot.weak{background:var(--amber);}
   .tl-dot.good{background:var(--green);}
   .tl-line{flex:1;width:1px;background:var(--border);margin-top:2px;}
@@ -488,22 +496,22 @@
 
         <!-- Overview -->
         <div class="overview">
-          <div class="ov-card">
+          <div class="ov-card" id="ovCardTotal" onclick="applyStatFilter('total')">
             <div class="label"><span class="dot orange"></span>重点关注学生数</div>
             <div class="num" id="statTotal">--</div>
             <div class="sub" id="statTotalSub">覆盖 -- 个班级</div>
           </div>
-          <div class="ov-card accent-risk">
+          <div class="ov-card accent-risk" id="ovCardRisk" onclick="applyStatFilter('risk')">
             <div class="label"><span class="dot red"></span>风险待处理</div>
             <div class="num" id="statRisk">--</div>
             <div class="sub" id="statRiskSub">含 -- 例高风险</div>
           </div>
-          <div class="ov-card accent-orange">
+          <div class="ov-card accent-orange" id="ovCardWeak" onclick="applyStatFilter('weak')">
             <div class="label"><span class="dot orange"></span>持续薄弱</div>
             <div class="num" id="statWeak">--</div>
             <div class="sub">连续 3 次及以上待提升</div>
           </div>
-          <div class="ov-card accent-blue">
+          <div class="ov-card accent-blue" id="ovCardNew" onclick="applyStatFilter('new')">
             <div class="label"><span class="dot blue"></span>今日新增</div>
             <div class="num" id="statNew">--</div>
             <div class="sub">较昨日 +2</div>
@@ -518,24 +526,35 @@
             <option value="八上9-1班">八上9-1班</option>
             <option value="八上8-2班">八上8-2班</option>
           </select>
+          <select id="fTier">
+            <option value="">全部分层</option>
+            <option value="A">A层</option>
+            <option value="B">B层</option>
+          </select>
           <div class="ms-filter" id="msPerf">
             <button type="button" class="ms-trigger" id="msPerfTrigger">全部重点表现</button>
             <div class="ms-panel" id="msPerfPanel">
               <div class="ms-group-label">作业表现</div>
-              <label class="ms-option"><input type="checkbox" value="perf-4star">四星待提升</label>
-              <label class="ms-option"><input type="checkbox" value="perf-5star">五星佳作</label>
-              <label class="ms-option"><input type="checkbox" value="perf-select">精选佳作</label>
-              <div class="ms-group-label">学习行为（即将上线）</div>
+              <label class="ms-option"><input type="checkbox" value="hw-risk-high">风险·高风险</label>
+              <label class="ms-option"><input type="checkbox" value="hw-ghost">疑似AI代写</label>
+              <label class="ms-option"><input type="checkbox" value="hw-risk-low">风险·低风险</label>
+              <label class="ms-option"><input type="checkbox" value="hw-4star">四星待提升</label>
+              <label class="ms-option"><input type="checkbox" value="hw-5star">五星佳作</label>
+              <label class="ms-option"><input type="checkbox" value="hw-select">精选佳作</label>
+              <label class="ms-option"><input type="checkbox" value="hw-4star-streak">连续四星</label>
+              <label class="ms-option"><input type="checkbox" value="hw-5star-streak">连续五星</label>
+              <label class="ms-option"><input type="checkbox" value="hw-select-streak">连续精选</label>
+              <div class="ms-group-label">作文批改</div>
+              <label class="ms-option"><input type="checkbox" value="essay-risk-high">风险·高风险</label>
+              <label class="ms-option"><input type="checkbox" value="essay-ghost">疑似AI代写</label>
+              <label class="ms-option"><input type="checkbox" value="essay-risk-low">风险·低风险</label>
+              <div class="ms-group-label">能力变化</div>
+              <label class="ms-option"><input type="checkbox" value="ability-up">「子能力」提升</label>
+              <label class="ms-option"><input type="checkbox" value="ability-down">「子能力」下降</label>
+              <label class="ms-option"><input type="checkbox" value="ability-good-streak">「子能力」持续优秀</label>
+              <label class="ms-option"><input type="checkbox" value="ability-weak-streak">「子能力」持续薄弱</label>
+              <div class="ms-group-label">上课表现 / 分层突变（即将上线）</div>
               <label class="ms-option" style="opacity:.45;cursor:not-allowed;"><input type="checkbox" disabled>敬请期待</label>
-              <div class="ms-group-label">学情</div>
-              <label class="ms-option"><input type="checkbox" value="situ-subskill-up">单次能力提升</label>
-              <label class="ms-option"><input type="checkbox" value="situ-subskill-down">单次能力下降</label>
-              <label class="ms-option"><input type="checkbox" value="situ-weak">持续薄弱</label>
-              <label class="ms-option"><input type="checkbox" value="situ-good">持续优秀</label>
-              <div class="ms-group-label">风险</div>
-              <label class="ms-option"><input type="checkbox" value="risk-l2">低风险</label>
-              <label class="ms-option"><input type="checkbox" value="risk-l3">高风险</label>
-              <label class="ms-option"><input type="checkbox" value="ghost">疑似AI代写</label>
               <div class="ms-actions">
                 <button type="button" class="ms-clear" id="msPerfClear">清空</button>
                 <button type="button" class="ms-done" id="msPerfDone">完成</button>
@@ -569,6 +588,7 @@
           <div class="list-head">
             <div>学员</div>
             <div>班级</div>
+            <div>学生分层</div>
             <div>重点表现</div>
             <div>关注原因</div>
             <div>建议反馈</div>
@@ -610,7 +630,6 @@
           <div class="modal-section-title">重点表现</div>
           <div class="timeline" id="mTlBox"></div>
           <div class="modal-section-title" style="margin-top:18px;">反馈建议</div>
-          <div class="advice-basis" id="mAdviceBasis"></div>
           <div id="mFeedbackBox"></div>
           <div class="modal-section-title" style="margin-top:18px;">跟进记录</div>
           <div class="sp-toolbar">
@@ -642,20 +661,23 @@
 <script src="重点关注-shared.js"></script>
 <script>
 
-  const filters = { q:"", cls:"", perf:new Set(), status:"pending", genTime:"", genFrom:"", genTo:"" };
+  const filters = { q:"", cls:"", tier:"", perf:new Set(), status:"pending", genTime:"", genFrom:"", genTo:"", isNew:false };
+  // 概览统计卡片点击后聚合出的筛选条件，与 computeStats() 的统计口径一一对应
+  const RISK_FILTER_KEYS = ["hw-risk-high","hw-ghost","hw-risk-low","essay-risk-high","essay-ghost","essay-risk-low"];
+  let activeStatCard = null;
 
   function computeStats(){
     const total = new Set(data.map(d => d.name + '|' + d.cls)).size;
     const classes = new Set(data.map(d => d.cls));
     const riskPending = data.filter(d => d.category === "risk" && d.status === "pending").length;
-    const l3Pending = data.filter(d => d.level === "l3" && d.status === "pending").length;
-    const weakCount = data.filter(d => d.category === "weak").length;
+    const urgentPending = data.filter(d => d.priority === "urgent" && d.status === "pending").length;
+    const weakCount = data.filter(d => d.filterKey === "ability-weak-streak").length;
     const newCount = data.filter(d => d.isNew).length;
 
     document.getElementById('statTotal').textContent = total;
     document.getElementById('statTotalSub').textContent = `覆盖 ${classes.size} 个班级`;
     document.getElementById('statRisk').textContent = riskPending;
-    document.getElementById('statRiskSub').textContent = `含 ${l3Pending} 例高风险`;
+    document.getElementById('statRiskSub').textContent = `含 ${urgentPending} 例紧急`;
     document.getElementById('statWeak').textContent = weakCount;
     document.getElementById('statNew').textContent = newCount;
   }
@@ -679,11 +701,13 @@
       .filter(({row}) => {
         if(filters.q && !row.name.includes(filters.q)) return false;
         if(filters.cls && row.cls !== filters.cls) return false;
+        if(filters.tier && row.tier !== filters.tier) return false;
         if(filters.perf.size){
           const rowKeys = [row.filterKey, ...(row.secondaryDims || []).map(d => d.filterKey)];
           if(!rowKeys.some(k => filters.perf.has(k))) return false;
         }
         if(filters.status && row.status !== filters.status) return false;
+        if(filters.isNew && !row.isNew) return false;
         if(!inGenTimeRange(tsOf(row.daysAgo))) return false;
         return true;
       });
@@ -729,13 +753,14 @@
     const [primaryTag, ...restTags] = tags;
     const lastCallTs = computeLastCallTs(row.name, row.cls);
     return `
-      <div class="list-row ${sev} ${row.level === 'l3' ? 'risk-l3' : ''} ${row.status === 'done' ? 'done' : ''}" id="card-${i}">
+      <div class="list-row ${sev} ${row.priority === 'urgent' ? 'risk-l3' : ''} ${row.status === 'done' ? 'done' : ''}" id="card-${i}">
         <div class="stu-cell" onclick="openStudentDetail(${i})">
           <div class="stu-name">${row.name}</div>
         </div>
         <div class="cls-cell">${row.cls}</div>
+        <div class="tier-cell"><span class="tier-badge tier-${row.tier.toLowerCase()}">${tierMap[row.tier].label}</span></div>
         <div class="lvl-cell">
-          ${row.urgent ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
+          ${row.priority === 'urgent' ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
           <span class="reason-level lvl-${primaryTag.level}" style="cursor:pointer;" onclick="event.stopPropagation();openStudentDetail(${primaryTag.idx})">${primaryTag.label}</span>
           ${restTags.length ? `
           <div class="dim-tag-row">
@@ -873,8 +898,8 @@
       const isLastGroup = gi === groups.length - 1;
       const groupTime = fmtTime(tsOf(g.items[0].r.daysAgo));
       const dotLevel = g.items.reduce((best, cur) =>
-        (casePriority[cur.r.level] ?? 0) > (casePriority[best] ?? 0) ? cur.r.level : best
-      , g.items[0].r.level);
+        (casePriority[cur.r.priority] ?? 0) > (casePriority[best.priority] ?? 0) ? cur.r : best
+      , g.items[0].r).level;
       const groupSourceType = g.items.map(({r}) => r.sourceType).find(Boolean);
       const sourceTagHtml = groupSourceType ? `<span class="tl-source-tag">${groupSourceType}</span>` : ``;
       const casesHtml = g.items.map(({r, idx}) => {
@@ -883,7 +908,7 @@
         <div class="tl-case ${isActive ? 'active' : ''}">
           <div class="tl-case-top">
             ${isActive ? `<span class="tl-latest-badge">反馈建议依据</span>` : ``}
-            ${r.urgent ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
+            ${r.priority === 'urgent' ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
             <span class="reason-level lvl-${r.level}">${r.perfLabel}</span>
           </div>
           <div class="tl-evidence">${r.evidence}</div>
@@ -931,8 +956,6 @@
   // 展示内容固定取该生 pickFeedbackCaseIdx() 选出的最新触发case，不随时间轴点击切换（见 modalSelectedIndex 声明处注释）
   function renderModalFeedback(){
     const row = data[modalSelectedIndex];
-    document.getElementById('mAdviceBasis').textContent =
-      `基于该生最新一次触发生成（${row.perfLabel} · ${fmtTime(tsOf(row.daysAgo))}）；若该生此后再次触发新case，下次打开将自动更新为最新一条`;
     const timing = row.timingAdvice || '暂无沟通时机建议';
     const channel = row.channelAdvice || '暂无沟通方式建议';
     const script = row.scriptAdvice || '暂无沟通话术策略建议';
@@ -1091,18 +1114,78 @@
     renderFuList();
   }
 
+  // ---- 概览统计卡片点击聚合：点击卡片数值即按该卡片的统计口径联动下方筛选条件（见 computeStats） ----
+  const STAT_CARD_IDS = { total:"ovCardTotal", risk:"ovCardRisk", weak:"ovCardWeak", new:"ovCardNew" };
+  const STAT_CARD_LABELS = { total:"重点关注学生数", risk:"风险待处理", weak:"持续薄弱", new:"今日新增" };
+
+  function updateStatCardActive(){
+    Object.keys(STAT_CARD_IDS).forEach(kind => {
+      document.getElementById(STAT_CARD_IDS[kind]).classList.toggle('active', activeStatCard === kind);
+    });
+  }
+  function clearActiveStatCard(){
+    if(activeStatCard){ activeStatCard = null; updateStatCardActive(); }
+  }
+  function resetFiltersToDefault(){
+    filters.q = ""; filters.cls = ""; filters.tier = ""; filters.perf = new Set(); filters.status = "pending";
+    filters.genTime = ""; filters.genFrom = ""; filters.genTo = ""; filters.isNew = false;
+    document.getElementById('fSearch').value = "";
+    document.getElementById('fClass').value = "";
+    document.getElementById('fTier').value = "";
+    msPerfCheckboxes().forEach(cb => cb.checked = false);
+    updateMsPerfTrigger();
+    document.getElementById('fStatus').value = "pending";
+    document.getElementById('fGenTime').value = "";
+    document.getElementById('customRangeBox').style.display = 'none';
+  }
+  function applyStatFilter(kind){
+    if(activeStatCard === kind){
+      activeStatCard = null;
+      resetFiltersToDefault();
+      updateStatCardActive();
+      render();
+      return;
+    }
+    activeStatCard = kind;
+    resetFiltersToDefault();
+    if(kind === 'total'){
+      filters.status = "";
+      document.getElementById('fStatus').value = "";
+    } else if(kind === 'risk'){
+      filters.status = "pending";
+      RISK_FILTER_KEYS.forEach(k => filters.perf.add(k));
+      msPerfCheckboxes().forEach(cb => { if(RISK_FILTER_KEYS.includes(cb.value)) cb.checked = true; });
+      updateMsPerfTrigger();
+    } else if(kind === 'weak'){
+      filters.status = "";
+      document.getElementById('fStatus').value = "";
+      filters.perf.add('ability-weak-streak');
+      msPerfCheckboxes().forEach(cb => { if(cb.value === 'ability-weak-streak') cb.checked = true; });
+      updateMsPerfTrigger();
+    } else if(kind === 'new'){
+      filters.status = "";
+      document.getElementById('fStatus').value = "";
+      filters.isNew = true;
+    }
+    updateStatCardActive();
+    render();
+    showToast(`已按「${STAT_CARD_LABELS[kind]}」聚合列表`, "info");
+  }
+
   // ---- Filter bar wiring ----
-  document.getElementById('fSearch').addEventListener('input', (e) => { filters.q = e.target.value.trim(); render(); });
-  document.getElementById('fClass').addEventListener('change', (e) => { filters.cls = e.target.value; render(); });
-  document.getElementById('fStatus').addEventListener('change', (e) => { filters.status = e.target.value; render(); });
+  document.getElementById('fSearch').addEventListener('input', (e) => { clearActiveStatCard(); filters.q = e.target.value.trim(); render(); });
+  document.getElementById('fClass').addEventListener('change', (e) => { clearActiveStatCard(); filters.cls = e.target.value; render(); });
+  document.getElementById('fTier').addEventListener('change', (e) => { clearActiveStatCard(); filters.tier = e.target.value; render(); });
+  document.getElementById('fStatus').addEventListener('change', (e) => { clearActiveStatCard(); filters.status = e.target.value; render(); });
   document.getElementById('fGenTime').addEventListener('change', (e) => {
+    clearActiveStatCard();
     filters.genTime = e.target.value;
     document.getElementById('customRangeBox').style.display = (filters.genTime === 'custom') ? 'flex' : 'none';
     if(filters.genTime !== 'custom'){ filters.genFrom = ''; filters.genTo = ''; }
     render();
   });
-  document.getElementById('fGenFrom').addEventListener('change', (e) => { filters.genFrom = e.target.value; render(); });
-  document.getElementById('fGenTo').addEventListener('change', (e) => { filters.genTo = e.target.value; render(); });
+  document.getElementById('fGenFrom').addEventListener('change', (e) => { clearActiveStatCard(); filters.genFrom = e.target.value; render(); });
+  document.getElementById('fGenTo').addEventListener('change', (e) => { clearActiveStatCard(); filters.genTo = e.target.value; render(); });
 
   // ---- 重点表现多选筛选（同一学生可能同时命中多个维度，见 PRD 4.3/4.6） ----
   const msPerf = document.getElementById('msPerf');
@@ -1121,6 +1204,7 @@
   });
   msPerfCheckboxes().forEach(cb => {
     cb.addEventListener('change', () => {
+      clearActiveStatCard();
       if(cb.checked) filters.perf.add(cb.value);
       else filters.perf.delete(cb.value);
       updateMsPerfTrigger();
@@ -1129,6 +1213,7 @@
   });
   document.getElementById('msPerfClear').addEventListener('click', (e) => {
     e.stopPropagation();
+    clearActiveStatCard();
     filters.perf.clear();
     msPerfCheckboxes().forEach(cb => cb.checked = false);
     updateMsPerfTrigger();
@@ -1143,15 +1228,9 @@
   });
 
   document.getElementById('btnClearFilter').addEventListener('click', () => {
-    filters.q = ""; filters.cls = ""; filters.perf = new Set(); filters.status = "pending";
-    filters.genTime = ""; filters.genFrom = ""; filters.genTo = "";
-    document.getElementById('fSearch').value = "";
-    document.getElementById('fClass').value = "";
-    msPerfCheckboxes().forEach(cb => cb.checked = false);
-    updateMsPerfTrigger();
-    document.getElementById('fStatus').value = "pending";
-    document.getElementById('fGenTime').value = "";
-    document.getElementById('customRangeBox').style.display = 'none';
+    activeStatCard = null;
+    resetFiltersToDefault();
+    updateStatCardActive();
     render();
     showToast("已清空筛选条件", "info");
   });

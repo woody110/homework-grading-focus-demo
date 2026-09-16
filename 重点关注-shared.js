@@ -8,18 +8,20 @@ function fmtTime(ts){
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-// level: 'l3' | 'l2' | 'ghost-high' | 'ghost-low' | 'weak' | 'good' —— 内部分类与优先级权重、颜色分组，教师侧展示文案见 perfLabel，不受此字段影响
-// filterKey: 对应筛选下拉的方向级选项（如 situ-subskill-down 对应所有子能力单次下降实例），疑似AI代写的 ghost-high/ghost-low 统一收敛为 ghost
-// 【2026-09-14】子能力"提升/下降"单次判定归类为"学情"维度（filterKey: situ-subskill-up/down），与"学情"跨批次趋势（situ-weak/good）同属学情分组、但触发类型不同（前者离散事件类、后者趋势累积类）；原因：该判定来源是学情档案，不锚定于某一份具体作业，归入"作业表现"不准确
-// perfLabel: 列表/详情实际展示的具体重点表现文案，含子能力名称时使用「」标注
+// tier: 'A' | 'B' —— 学生分层，学生级属性；同一学生（name+cls）的多条 case 需保持一致取值
+// level: 'l3' | 'l2' | 'ghost' | 'weak' | 'good' —— 仅用于视觉严重度配色（红/紫/橙/绿）与行高亮，不参与优先级排序；教师侧展示文案见 perfLabel
+// priority: 'urgent' | 'high' | 'mid' —— 对应《学期关注任务规则表》的紧急/高/中三档，逐条标签类型赋值，决定排序权重（见 casePriority）与"紧急"角标展示，不再依赖 level
+// filterKey: 对应筛选下拉的具体标签类型选项，按二级任务命名空间前缀区分——hw-*(作业表现) / essay-*(作文批改) / ability-*(能力变化)，同名标签在不同二级任务下 filterKey 不同（如 hw-risk-high 与 essay-risk-high）
+// 【2026-09-16】筛选与展示已按《AI教辅智能任务体系-学期关注任务规则表.md》重新对齐：风险类信号按 sourceType 归入具体二级任务（sourceType=校内作文 → 作文批改，其余 → 作业表现），星级/精选类信号一律归入作业表现（作文批改的星级规则尚未定义），学情档案类信号一律归入能力变化；「子能力」提升/下降为单次判定，持续优秀/持续薄弱为连续3次同向判定，[[子能力提升/下降数据来源修正]]
+// perfLabel: 列表/详情实际展示的具体重点表现文案，统一带二级任务前缀（作业表现·/作文批改·/能力变化·），含子能力名称时使用「」标注
 // category: 'risk' | 'weak' | 'good' —— 对应统计卡片口径（4.5节）；风险类含情绪风险与疑似AI代写两个 subtype
 // assignmentTitle: 来源于同一份作业提交的 case 用此字段标记，详情卡片时间轴据此分组聚合；学情类 case（含单次子能力判定、跨多次提交的趋势）均不设置此字段，因数据来源学情档案，不锚定于某一份作业
-// sourceType: 该次触发的来源渠道——课后作业/校内作文/阅读宝典/试卷批改等，随 assignmentTitle 一同标记，时间轴上每组仅展示一次
+// sourceType: 该次触发的来源渠道——课后作业/校内作文/阅读宝典/试卷批改等，随 assignmentTitle 一同标记，时间轴上每组仅展示一次；同时也是风险类信号归属二级任务的判定依据
 // timingAdvice/channelAdvice/scriptAdvice: 反馈建议模块的三个固定子模块——沟通时机建议/沟通方式建议/沟通话术策略建议
 const data = [
   {
-    name:"若宸", cls:"八上9-1班", phone:"13812342201", level:"l3", filterKey:"risk-l3", perfLabel:"风险·高风险",
-    category:"risk", subtype:"emotion", urgent:true, isNew:true, daysAgo:0,
+    name:"若宸", cls:"八上9-1班", phone:"13812342201", tier:"A", level:"l3", filterKey:"essay-risk-high", perfLabel:"作文批改·风险·高风险",
+    category:"risk", subtype:"emotion", priority:"urgent", isNew:true, daysAgo:0,
     assignmentTitle:"《长大以后》", sourceType:"校内作文",
     reason:"作文《长大以后》中出现明显负面情绪与自我否定表达，需高度关注",
     evidence:"本次作文《长大以后》被判定为「高风险」，文中出现自我否定与绝望感表达，原文是：\"我觉得自己一直在拖累大家，有时候真的很想消失，什么都不用管了。\"",
@@ -31,13 +33,13 @@ const data = [
     channelAdvice:"建议优先电话沟通而非文字消息，语气与措辞更易把控，也能第一时间感知家长反应；暂无该生历史沟通记录可参考，建议本次沟通后补充记录。",
     scriptAdvice:"仅供沟通思路参考：先了解近期是否有特殊情况，再委婉带出观察到的表达，避免直接引用原文刺激家长情绪。",
     secondaryDims:[
-      {filterKey:"situ-weak", level:"weak", perfLabel:"学情·「情感感知」持续薄弱", reason:"「情感感知」能力近期连续3次待提升"}
+      {filterKey:"ability-weak-streak", level:"weak", perfLabel:"能力变化·「情感感知」持续薄弱", priority:"high", reason:"「情感感知」能力近期连续3次待提升"}
     ],
     followUps:[]
   },
   {
-    name:"若宸", cls:"八上9-1班", phone:"13812342201", level:"weak", filterKey:"perf-4star", perfLabel:"作业表现·四星待提升",
-    category:"weak", urgent:false, isNew:true, daysAgo:0,
+    name:"若宸", cls:"八上9-1班", phone:"13812342201", tier:"A", level:"weak", filterKey:"hw-4star", perfLabel:"作业表现·四星待提升",
+    category:"weak", priority:"mid", isNew:true, daysAgo:0,
     assignmentTitle:"《长大以后》", sourceType:"校内作文",
     reason:"本次作文《长大以后》获评「四星」，结构组织完整但情感感知偏单薄",
     evidence:"本次作文《长大以后》获评「四星」，建议：整体结构组织完整，但情感感知偏单薄，原文是：\"长大以后我想做一名普通的上班族，每天按时上下班就好。\"",
@@ -50,8 +52,8 @@ const data = [
     followUps:[]
   },
   {
-    name:"啸铭", cls:"八上8-2班", phone:"13934564407", level:"l2", filterKey:"risk-l2", perfLabel:"风险·低风险",
-    category:"risk", subtype:"emotion", urgent:false, isNew:false, daysAgo:1,
+    name:"啸铭", cls:"八上8-2班", phone:"13934564407", tier:"B", level:"l2", filterKey:"hw-risk-low", perfLabel:"作业表现·风险·低风险",
+    category:"risk", subtype:"emotion", priority:"mid", isNew:false, daysAgo:1,
     assignmentTitle:"《我的语文小结》", sourceType:"阅读宝典",
     reason:"本次作文《我的语文小结》中出现消极自我评价（\"我什么都写不好\"），建议关注",
     evidence:"本次作文《我的语文小结》被判定为「低风险」，出现消极自我评价，原文是：\"我怎么都写不好，感觉自己写作文就是不行。\"",
@@ -64,8 +66,8 @@ const data = [
     followUps:[]
   },
   {
-    name:"啸铭", cls:"八上8-2班", phone:"13934564407", level:"weak", filterKey:"situ-subskill-down", perfLabel:"学情·「细节捕捉」下降",
-    category:"weak", urgent:false, isNew:true, daysAgo:0,
+    name:"啸铭", cls:"八上8-2班", phone:"13934564407", tier:"B", level:"weak", filterKey:"ability-down", perfLabel:"能力变化·「细节捕捉」下降",
+    category:"weak", priority:"mid", isNew:true, daysAgo:0,
     reason:"学情档案单次判定「细节捕捉」子能力较此前出现下降",
     evidence:"学情档案基于历史题型统计，本次将「细节捕捉」子能力判定为「下降」，建议：细节描写偏笼统，缺少具体动作或感官描写；参考近期一次作文片段：\"暑假我去了外婆家，玩得很开心，吃了很多好吃的。\"",
     status:"pending",
@@ -75,13 +77,13 @@ const data = [
     channelAdvice:"建议以文字消息为主；暂无该生历史沟通记录可参考，可结合本次风险类任务的沟通结果综合判断整体沟通频率是否合适。",
     scriptAdvice:"可参考建议措辞作为反馈基础，视情况调整语气。",
     secondaryDims:[
-      {filterKey:"situ-subskill-up", level:"good", perfLabel:"学情·「结构组织」提升", reason:"学情档案单次判定「结构组织」子能力较此前出现提升"}
+      {filterKey:"ability-up", level:"good", perfLabel:"能力变化·「结构组织」提升", priority:"mid", reason:"学情档案单次判定「结构组织」子能力较此前出现提升"}
     ],
     followUps:[]
   },
   {
-    name:"张梓萱", cls:"八上9-1班", phone:"13678907723", level:"weak", filterKey:"situ-weak", perfLabel:"学情·「字面理解」持续薄弱",
-    category:"weak", urgent:false, isNew:true, daysAgo:0,
+    name:"张梓萱", cls:"八上9-1班", phone:"13678907723", tier:"A", level:"weak", filterKey:"ability-weak-streak", perfLabel:"能力变化·「字面理解」持续薄弱",
+    category:"weak", priority:"high", isNew:true, daysAgo:0,
     reason:"近1个月「字面理解」能力连续3次待提升，且呈下降趋势",
     evidence:"「字面理解」能力子维度连续3次被判定为「尚未达到」（连续1次→2次→3次待提升，本次续期更新，非重复新建），本次原句是：\"因为下雨的原因，所以导致运动会取消了。\"，判定理由：滥用关联词导致语义重复。",
     status:"pending",
@@ -94,8 +96,8 @@ const data = [
     followUps:[]
   },
   {
-    name:"陈奕帆", cls:"八上8-2班", phone:"13723455561", level:"weak", filterKey:"situ-weak", perfLabel:"学情·「整体感知」持续薄弱",
-    category:"weak", urgent:false, isNew:false, daysAgo:2,
+    name:"陈奕帆", cls:"八上8-2班", phone:"13723455561", tier:"B", level:"weak", filterKey:"ability-weak-streak", perfLabel:"能力变化·「整体感知」持续薄弱",
+    category:"weak", priority:"high", isNew:false, daysAgo:2,
     reason:"近1个月「整体感知」连续3次待提升",
     evidence:"「整体感知」能力子维度连续3次被判定为「尚未达到」，本次判定理由：概括内容遗漏关键信息，仅复述局部情节。",
     status:"done",
@@ -109,8 +111,8 @@ const data = [
     ]
   },
   {
-    name:"李知遥", cls:"八上9-1班", phone:"13556789082", level:"weak", filterKey:"situ-subskill-down", perfLabel:"学情·「字面理解」下降",
-    category:"weak", urgent:false, isNew:true, daysAgo:0,
+    name:"李知遥", cls:"八上9-1班", phone:"13556789082", tier:"A", level:"weak", filterKey:"ability-down", perfLabel:"能力变化·「字面理解」下降",
+    category:"weak", priority:"mid", isNew:true, daysAgo:0,
     reason:"学情档案单次判定「字面理解」子能力较此前出现下降",
     evidence:"学情档案基于历史题型统计，本次将「字面理解」子能力判定为「下降」；参考近期一次作文原句：\"通过这次活动，使我懂得了团结的重要性。\"，判定理由：主语残缺，滥用介词导致句子成分缺失。",
     status:"pending",
@@ -120,13 +122,13 @@ const data = [
     channelAdvice:"建议以文字消息为主；暂无该生历史沟通记录可参考。",
     scriptAdvice:"可参考建议措辞沟通，同时可提及「原创表达」子能力的进步以平衡语气。",
     secondaryDims:[
-      {filterKey:"situ-subskill-up", level:"good", perfLabel:"学情·「原创表达」提升", reason:"学情档案单次判定「原创表达」子能力较此前出现提升"}
+      {filterKey:"ability-up", level:"good", perfLabel:"能力变化·「原创表达」提升", priority:"mid", reason:"学情档案单次判定「原创表达」子能力较此前出现提升"}
     ],
     followUps:[]
   },
   {
-    name:"周予安", cls:"八上9-1班", phone:"13345676650", level:"good", filterKey:"situ-good", perfLabel:"学情·「原创表达」持续优秀",
-    category:"good", urgent:false, isNew:false, daysAgo:3,
+    name:"周予安", cls:"八上9-1班", phone:"13345676650", tier:"B", level:"good", filterKey:"ability-good-streak", perfLabel:"能力变化·「原创表达」持续优秀",
+    category:"good", priority:"high", isNew:false, daysAgo:3,
     reason:"「原创表达」能力连续3次表现优秀，建议转为习惯培养类反馈",
     evidence:"「原创表达」能力子维度连续3次被判定为高于本年级预期。本次判定理由：叙事结构完整，比喻使用恰当。",
     status:"pending",
@@ -138,22 +140,23 @@ const data = [
     followUps:[]
   },
   {
-    name:"沈知微", cls:"八上8-2班", phone:"13123452298", level:"good", filterKey:"perf-5star", perfLabel:"作业表现·五星佳作",
-    category:"good", urgent:false, isNew:true, daysAgo:0,
+    name:"沈知微", cls:"八上8-2班", phone:"13123452298", tier:"A", level:"good", filterKey:"hw-5star-streak", perfLabel:"作业表现·连续五星",
+    category:"good", priority:"high", isNew:true, daysAgo:0,
     assignmentTitle:"《一件难忘的小事》", sourceType:"校内作文",
-    reason:"本次作文《一件难忘的小事》获评「五星」，细节描写生动，建议肯定鼓励",
-    evidence:"本次作文《一件难忘的小事》获评「五星」，细节描写生动，建议肯定鼓励，原文是：\"外婆的手粗糙得像老树皮，可是每次她把我的手包在里面，我都觉得特别安心。\"",
+    reason:"近3次作文（含本次《一件难忘的小事》）连续获评「五星」，细节描写持续生动，建议肯定鼓励并保持",
+    evidence:"《一件难忘的小事》等近3次作文连续获评「五星」（连续1次→2次→3次，本次续期更新，非重复新建），细节描写持续生动，本次原文是：\"外婆的手粗糙得像老树皮，可是每次她把我的手包在里面，我都觉得特别安心。\"",
     status:"pending",
-    copy:"这次作文孩子写得特别好，被评为「五星」，尤其是细节描写让人印象深刻，能感觉到平时观察生活很用心。建议家长趁热问问孩子创作时的想法，让这份用心被看见；也可以让孩子把这篇作文念给家人听，增强一下成就感～",
-    points:["单次高分表现，建议先肯定，再观察后续是否稳定在这个水平","可结合孩子平时的阅读积累，鼓励保持这个状态","与「学情」维度的持续优秀趋势不同，这是单次亮点，措辞上更适合\"惊喜式\"表扬"],
-    timingAdvice:"表扬类反馈建议趁热尽快沟通，让孩子的成就感能被及时看见。",
+    renewNote:"同一「五星」表现已连续续期 3 次（连续1次→2次→3次），非重复新建任务",
+    copy:"孩子最近三次作文都被评为「五星」，尤其是细节描写一直让人印象深刻，能感觉到平时观察生活很用心。建议家长趁热问问孩子创作时的想法，让这份用心被看见；也可以让孩子把这几篇作文念给家人听，增强一下成就感～",
+    points:["连续三次高分表现，建议弱化\"单次表扬\"，转向肯定这份稳定的水平","可结合孩子平时的阅读积累，鼓励保持这个状态","与「能力变化」维度的持续优秀趋势不同，这是同一份「作业表现」的连续亮点，措辞上可以体现\"持续稳定\"而非\"惊喜式\"表扬"],
+    timingAdvice:"连续三次表扬类反馈建议趁热尽快沟通，让孩子的成就感能被及时看见。",
     channelAdvice:"建议文字消息即可，附上原文片段更有说服力；暂无该生历史沟通记录可参考。",
     scriptAdvice:"建议附上原文中的细节描写片段增强真实感。",
     followUps:[]
   },
   {
-    name:"陆亦臻", cls:"八上9-1班", phone:"18934563345", level:"good", filterKey:"perf-select", perfLabel:"作业表现·精选佳作",
-    category:"good", urgent:false, isNew:false, daysAgo:0,
+    name:"陆亦臻", cls:"八上9-1班", phone:"18934563345", tier:"B", level:"good", filterKey:"hw-select", perfLabel:"作业表现·精选佳作",
+    category:"good", priority:"mid", isNew:false, daysAgo:0,
     assignmentTitle:"《一件难忘的小事》", sourceType:"校内作文",
     reason:"本次作文《一件难忘的小事》获评「精选」，立意新颖、语言老练，为本次作业最高等级评价",
     evidence:"本次作文《一件难忘的小事》获评本次作业最高等级「精选」，立意新颖、语言老练，比五星更进一步，原文是：\"时间从不回头，它只是把没说完的话，都酿成了往后的沉默。\"",
@@ -166,8 +169,8 @@ const data = [
     followUps:[]
   },
   {
-    name:"沈昱", cls:"八上8-2班", phone:"18645677712", level:"weak", filterKey:"perf-4star", perfLabel:"作业表现·四星待提升",
-    category:"weak", urgent:false, isNew:false, daysAgo:0,
+    name:"沈昱", cls:"八上8-2班", phone:"18645677712", tier:"A", level:"weak", filterKey:"hw-4star", perfLabel:"作业表现·四星待提升",
+    category:"weak", priority:"mid", isNew:false, daysAgo:0,
     assignmentTitle:"《我的老师》", sourceType:"校内作文",
     reason:"本次作文《我的老师》获评「四星」，建议关注是否需要巩固",
     evidence:"本次作文《我的老师》获评「四星」，建议：结构完整但结尾略显仓促，原文结尾是：\"老师对我们很好，我很喜欢她，就这样吧。\"",
@@ -180,8 +183,8 @@ const data = [
     followUps:[]
   },
   {
-    name:"何雨橙", cls:"八上9-1班", phone:"15278904489", level:"ghost-low", filterKey:"ghost", perfLabel:"疑似AI代写",
-    category:"risk", subtype:"ghost", urgent:false, isNew:true, daysAgo:0,
+    name:"何雨橙", cls:"八上9-1班", phone:"15278904489", tier:"B", level:"ghost", filterKey:"essay-ghost", perfLabel:"作文批改·疑似AI代写",
+    category:"risk", subtype:"ghost", priority:"high", isNew:true, daysAgo:0,
     assignmentTitle:"《一件难忘的小事》", sourceType:"校内作文",
     reason:"本次作文《一件难忘的小事》疑似AI代写，建议留意",
     evidence:"本次作文《一件难忘的小事》经现有批改流程判定为疑似AI代写，判定理由：用词与句式风格与该生历史作文明显不符，出现超出该学段常见水平的修辞表达。",
@@ -195,8 +198,8 @@ const data = [
     followUps:[]
   },
   {
-    name:"陆星辰", cls:"八上8-2班", phone:"15845676623", level:"ghost-high", filterKey:"ghost", perfLabel:"疑似AI代写",
-    category:"risk", subtype:"ghost", urgent:false, isNew:false, daysAgo:0,
+    name:"陆星辰", cls:"八上8-2班", phone:"15845676623", tier:"A", level:"ghost", filterKey:"hw-ghost", perfLabel:"作业表现·疑似AI代写",
+    category:"risk", subtype:"ghost", priority:"high", isNew:false, daysAgo:0,
     assignmentTitle:"《成长的滋味》", sourceType:"阅读宝典",
     reason:"本次作文《成长的滋味》疑似AI代写，证据强度高，建议重点核实",
     evidence:"本次作文《成长的滋味》经现有批改流程判定为疑似AI代写，且证据强度高，判定理由：整体行文风格、用词密度与该生历次作文数据差异显著，且出现明显超越学段的长句结构。",
@@ -217,6 +220,10 @@ const statusMap = {
   ignored:{cls:"status-ignored", label:"已忽略"}
 };
 const sevMap = { risk:{emotion:"sev-risk", ghost:"sev-ghost"}, weak:"sev-weak", good:"sev-good" };
+const tierMap = {
+  A:{cls:"tier-a", label:"A层"},
+  B:{cls:"tier-b", label:"B层"}
+};
 function sevClassOf(row){
   if(row.category === "risk") return sevMap.risk[row.subtype];
   return sevMap[row.category];
@@ -233,8 +240,8 @@ function suggestSummaryOf(row){
   return "建议：查看详情";
 }
 
-const casePriority = { 'l3':100, 'ghost-high':100, 'l2':90, 'ghost-low':90, 'weak':70, 'good':10 };
-function priorityOf(i){ return casePriority[data[i].level] ?? 0; }
+const casePriority = { urgent:100, high:70, mid:40 };
+function priorityOf(i){ return casePriority[data[i].priority] ?? 0; }
 
 // 该学生全部 case（不限处理状态、不受当前筛选条件影响），按生成时间倒序，供详情页时间轴使用
 function getAllCasesForStudent(name, cls){
@@ -253,7 +260,7 @@ function pickFeedbackCaseIdx(sortedCases){
   if(!sortedCases.length) return null;
   const latestTs = tsOf(sortedCases[0].r.daysAgo);
   const sameTime = sortedCases.filter(c => tsOf(c.r.daysAgo) === latestTs);
-  sameTime.sort((a, b) => (casePriority[b.r.level] ?? 0) - (casePriority[a.r.level] ?? 0));
+  sameTime.sort((a, b) => (casePriority[b.r.priority] ?? 0) - (casePriority[a.r.priority] ?? 0));
   return sameTime[0].idx;
 }
 
@@ -266,17 +273,17 @@ function getAllTagsForStudent(name, cls){
     const primaryKey = r.filterKey + '|' + r.perfLabel;
     if(!seen.has(primaryKey)){
       seen.add(primaryKey);
-      tags.push({ label:r.perfLabel, level:r.level, filterKey:r.filterKey, idx });
+      tags.push({ label:r.perfLabel, level:r.level, filterKey:r.filterKey, priority:r.priority, idx });
     }
     (r.secondaryDims || []).forEach(d => {
       const key = d.filterKey + '|' + d.perfLabel;
       if(!seen.has(key)){
         seen.add(key);
-        tags.push({ label:d.perfLabel, level:d.level, filterKey:d.filterKey, idx });
+        tags.push({ label:d.perfLabel, level:d.level, filterKey:d.filterKey, priority:d.priority, idx });
       }
     });
   });
-  tags.sort((a, b) => (casePriority[b.level] ?? 0) - (casePriority[a.level] ?? 0));
+  tags.sort((a, b) => (casePriority[b.priority] ?? 0) - (casePriority[a.priority] ?? 0));
   return tags;
 }
 
