@@ -354,18 +354,23 @@
   .tl-evidence{font-size:12.5px;line-height:1.6;color:var(--text-1);margin-bottom:2px;}
   .tl-group-foot{margin-top:8px;}
 
-  /* ---------- 反馈建议（结构化展示：同一区域内分沟通时机/沟通方式/沟通话术三段，不强调序号） ---------- */
+  /* ---------- 反馈建议（结构化展示：沟通时机/沟通方式/沟通话术三段，各自独立小节+图标+缩进正文，用虚线分隔） ---------- */
   .advice-basis{font-size:12px;color:var(--text-3);margin-bottom:8px;}
   .tl-latest-badge{font-size:10px;font-weight:600;color:var(--orange-dark);background:var(--orange-tint);border-radius:10px;padding:1px 8px;}
-  .advice-group{border:1px solid var(--border);border-radius:10px;background:var(--grey-tint);padding:14px 16px;}
-  .advice-section{margin-bottom:10px;}
-  .advice-section:last-child{margin-bottom:0;}
-  .advice-section-title{font-size:13px;font-weight:700;color:var(--text-2);}
-  .advice-section .sc{font-size:13px;line-height:1.7;color:var(--text-1);}
-  .advice-icons{display:inline-flex;gap:6px;vertical-align:middle;margin:0 4px;}
+  .advice-group{border:1px solid var(--border);border-radius:10px;background:var(--grey-tint);padding:2px 16px;}
+  .advice-section{padding:13px 0;}
+  .advice-section + .advice-section{border-top:1px dashed var(--border);}
+  .advice-section-head{display:flex;align-items:center;gap:8px;}
+  .advice-icon{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;}
+  .advice-section.tone-timing .advice-icon{background:var(--orange-tint);color:var(--orange-dark);}
+  .advice-section.tone-channel .advice-icon{background:var(--blue-tint);color:var(--blue);}
+  .advice-section.tone-script .advice-icon{background:var(--purple-tint);color:var(--purple);}
+  .advice-section-title{font-size:13px;font-weight:700;color:var(--text-1);}
+  .advice-section .sc{display:block;font-size:13px;line-height:1.7;color:var(--text-2);padding-left:30px;margin-top:5px;}
+  .advice-icons{display:inline-flex;gap:6px;margin-left:auto;}
   .advice-icon-btn{
     width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--border);color:var(--text-2);
-    display:inline-flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;flex-shrink:0;
   }
   .advice-icon-btn:hover{border-color:var(--orange);color:var(--orange-dark);}
   .modal-warn{
@@ -971,14 +976,17 @@
     const channelIcon = channelAdviceIcon(row.channelAdvice);
     let html = `
       <div class="advice-group">
-        <div class="advice-section">
-          <span class="advice-section-title">沟通时机建议：</span><span class="sc">${timing}</span>
+        <div class="advice-section tone-timing">
+          <div class="advice-section-head"><span class="advice-icon">⏱</span><span class="advice-section-title">沟通时机建议</span></div>
+          <span class="sc">${timing}</span>
         </div>
-        <div class="advice-section">
-          <span class="advice-section-title">沟通方式建议：</span><span class="sc">${channel}</span>${channelIcon ? `<span class="advice-icons">${channelIcon}</span>` : ''}
+        <div class="advice-section tone-channel">
+          <div class="advice-section-head"><span class="advice-icon">☎</span><span class="advice-section-title">沟通方式建议</span>${channelIcon ? `<span class="advice-icons">${channelIcon}</span>` : ''}</div>
+          <span class="sc">${channel}</span>
         </div>
-        <div class="advice-section">
-          <span class="advice-section-title">沟通话术策略建议：</span><span class="sc">${script}</span>
+        <div class="advice-section tone-script">
+          <div class="advice-section-head"><span class="advice-icon">💡</span><span class="advice-section-title">沟通话术策略建议</span></div>
+          <span class="sc">${script}</span>
         </div>
       </div>`;
     if(row.warn){
