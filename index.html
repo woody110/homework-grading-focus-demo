@@ -508,12 +508,12 @@
           <div class="ov-card accent-risk" id="ovCardRisk" onclick="applyStatFilter('risk')">
             <div class="label"><span class="dot red"></span>风险待处理</div>
             <div class="num" id="statRisk">--</div>
-            <div class="sub" id="statRiskSub">含 -- 例紧急</div>
+            <div class="sub" id="statRiskSub">含 -- 例情绪心理</div>
           </div>
           <div class="ov-card accent-orange" id="ovCardWeak" onclick="applyStatFilter('weak')">
             <div class="label"><span class="dot orange"></span>持续薄弱</div>
             <div class="num" id="statWeak">--</div>
-            <div class="sub">连续 3 次及以上待提升</div>
+            <div class="sub">连续 3 次及以上持续薄弱</div>
           </div>
           <div class="ov-card accent-blue" id="ovCardNew" onclick="applyStatFilter('new')">
             <div class="label"><span class="dot blue"></span>今日新增</div>
@@ -663,23 +663,28 @@
 <script src="重点关注-shared.js"></script>
 <script>
 
-  const filters = { q:"", cls:"", tier:"", perf:new Set(), status:"pending", genTime:"", genFrom:"", genTo:"", isNew:false };
+  // perfExact: true 时 perf 筛选只匹配 case 自身的 filterKey，忽略 secondaryDims（次要维度仅用于详情弹窗展示同一 case 的关联信息，不代表该 case 本身归属该标签类别）；用于统计卡片点击聚合，确保列表条数与卡片数字一致
+  const filters = { q:"", cls:"", tier:"", perf:new Set(), perfExact:false, status:"pending", genTime:"", genFrom:"", genTo:"", isNew:false };
   // 概览统计卡片点击后聚合出的筛选条件，与 computeStats() 的统计口径一一对应
+  // 风险待处理：标签类别为「情绪心理」+「疑似AI代写」的 case（不去重学生）；副文案仅统计「情绪心理」子集
+  const EMOTION_FILTER_KEYS = ["hw-emotion","essay-emotion"];
   const RISK_FILTER_KEYS = ["hw-emotion","hw-ghost","essay-emotion","essay-ghost"];
+  // 持续薄弱：标签类别为「连续四星」+「子能力持续薄弱」的 case（不去重学生）
+  const WEAK_FILTER_KEYS = ["hw-4star-streak","ability-weak-streak"];
   let activeStatCard = null;
 
   function computeStats(){
     const total = new Set(data.map(d => d.name + '|' + d.cls)).size;
     const classes = new Set(data.map(d => d.cls));
-    const riskPending = data.filter(d => d.category === "risk" && d.status === "pending").length;
-    const urgentPending = data.filter(d => d.priority === "urgent" && d.status === "pending").length;
-    const weakCount = data.filter(d => d.filterKey === "ability-weak-streak").length;
+    const riskPending = data.filter(d => RISK_FILTER_KEYS.includes(d.filterKey) && d.status === "pending").length;
+    const emotionPending = data.filter(d => EMOTION_FILTER_KEYS.includes(d.filterKey) && d.status === "pending").length;
+    const weakCount = data.filter(d => WEAK_FILTER_KEYS.includes(d.filterKey) && d.status === "pending").length;
     const newCount = data.filter(d => d.isNew).length;
 
     document.getElementById('statTotal').textContent = total;
     document.getElementById('statTotalSub').textContent = `覆盖 ${classes.size} 个班级`;
     document.getElementById('statRisk').textContent = riskPending;
-    document.getElementById('statRiskSub').textContent = `含 ${urgentPending} 例紧急`;
+    document.getElementById('statRiskSub').textContent = `含 ${emotionPending} 例情绪心理`;
     document.getElementById('statWeak').textContent = weakCount;
     document.getElementById('statNew').textContent = newCount;
   }
@@ -705,7 +710,7 @@
         if(filters.cls && row.cls !== filters.cls) return false;
         if(filters.tier && row.tier !== filters.tier) return false;
         if(filters.perf.size){
-          const rowKeys = [row.filterKey, ...(row.secondaryDims || []).map(d => d.filterKey)];
+          const rowKeys = filters.perfExact ? [row.filterKey] : [row.filterKey, ...(row.secondaryDims || []).map(d => d.filterKey)];
           if(!rowKeys.some(k => filters.perf.has(k))) return false;
         }
         if(filters.status && row.status !== filters.status) return false;
@@ -1131,7 +1136,7 @@
     if(activeStatCard){ activeStatCard = null; updateStatCardActive(); }
   }
   function resetFiltersToDefault(){
-    filters.q = ""; filters.cls = ""; filters.tier = ""; filters.perf = new Set(); filters.status = "pending";
+    filters.q = ""; filters.cls = ""; filters.tier = ""; filters.perf = new Set(); filters.perfExact = false; filters.status = "pending";
     filters.genTime = ""; filters.genFrom = ""; filters.genTo = ""; filters.isNew = false;
     document.getElementById('fSearch').value = "";
     document.getElementById('fClass').value = "";
@@ -1157,14 +1162,16 @@
       document.getElementById('fStatus').value = "";
     } else if(kind === 'risk'){
       filters.status = "pending";
+      filters.perfExact = true;
       RISK_FILTER_KEYS.forEach(k => filters.perf.add(k));
       msPerfCheckboxes().forEach(cb => { if(RISK_FILTER_KEYS.includes(cb.value)) cb.checked = true; });
       updateMsPerfTrigger();
     } else if(kind === 'weak'){
-      filters.status = "";
-      document.getElementById('fStatus').value = "";
-      filters.perf.add('ability-weak-streak');
-      msPerfCheckboxes().forEach(cb => { if(cb.value === 'ability-weak-streak') cb.checked = true; });
+      filters.status = "pending";
+      document.getElementById('fStatus').value = "pending";
+      filters.perfExact = true;
+      WEAK_FILTER_KEYS.forEach(k => filters.perf.add(k));
+      msPerfCheckboxes().forEach(cb => { if(WEAK_FILTER_KEYS.includes(cb.value)) cb.checked = true; });
       updateMsPerfTrigger();
     } else if(kind === 'new'){
       filters.status = "";
