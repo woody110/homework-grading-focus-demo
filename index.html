@@ -250,6 +250,10 @@
     50%{opacity:.4;transform:scale(1.4);}
     100%{opacity:1;transform:scale(1);}
   }
+  .high-badge{
+    display:inline-flex;align-items:center;gap:5px;background:var(--amber);color:#fff;font-size:11px;font-weight:700;
+    padding:2px 7px;border-radius:6px;
+  }
   .reason-level{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;white-space:nowrap;}
   .lvl-l3, .lvl-l2{background:var(--red-tint);color:var(--red);}
   .lvl-ghost{background:var(--purple-tint);color:var(--purple);}
@@ -504,7 +508,7 @@
           <div class="ov-card accent-risk" id="ovCardRisk" onclick="applyStatFilter('risk')">
             <div class="label"><span class="dot red"></span>风险待处理</div>
             <div class="num" id="statRisk">--</div>
-            <div class="sub" id="statRiskSub">含 -- 例高风险</div>
+            <div class="sub" id="statRiskSub">含 -- 例紧急</div>
           </div>
           <div class="ov-card accent-orange" id="ovCardWeak" onclick="applyStatFilter('weak')">
             <div class="label"><span class="dot orange"></span>持续薄弱</div>
@@ -535,9 +539,8 @@
             <button type="button" class="ms-trigger" id="msPerfTrigger">全部重点表现</button>
             <div class="ms-panel" id="msPerfPanel">
               <div class="ms-group-label">作业表现</div>
-              <label class="ms-option"><input type="checkbox" value="hw-risk-high">风险·高风险</label>
+              <label class="ms-option"><input type="checkbox" value="hw-emotion">情绪心理</label>
               <label class="ms-option"><input type="checkbox" value="hw-ghost">疑似AI代写</label>
-              <label class="ms-option"><input type="checkbox" value="hw-risk-low">风险·低风险</label>
               <label class="ms-option"><input type="checkbox" value="hw-4star">四星待提升</label>
               <label class="ms-option"><input type="checkbox" value="hw-5star">五星佳作</label>
               <label class="ms-option"><input type="checkbox" value="hw-select">精选佳作</label>
@@ -545,9 +548,8 @@
               <label class="ms-option"><input type="checkbox" value="hw-5star-streak">连续五星</label>
               <label class="ms-option"><input type="checkbox" value="hw-select-streak">连续精选</label>
               <div class="ms-group-label">作文批改</div>
-              <label class="ms-option"><input type="checkbox" value="essay-risk-high">风险·高风险</label>
+              <label class="ms-option"><input type="checkbox" value="essay-emotion">情绪心理</label>
               <label class="ms-option"><input type="checkbox" value="essay-ghost">疑似AI代写</label>
-              <label class="ms-option"><input type="checkbox" value="essay-risk-low">风险·低风险</label>
               <div class="ms-group-label">能力变化</div>
               <label class="ms-option"><input type="checkbox" value="ability-up">「子能力」提升</label>
               <label class="ms-option"><input type="checkbox" value="ability-down">「子能力」下降</label>
@@ -663,7 +665,7 @@
 
   const filters = { q:"", cls:"", tier:"", perf:new Set(), status:"pending", genTime:"", genFrom:"", genTo:"", isNew:false };
   // 概览统计卡片点击后聚合出的筛选条件，与 computeStats() 的统计口径一一对应
-  const RISK_FILTER_KEYS = ["hw-risk-high","hw-ghost","hw-risk-low","essay-risk-high","essay-ghost","essay-risk-low"];
+  const RISK_FILTER_KEYS = ["hw-emotion","hw-ghost","essay-emotion","essay-ghost"];
   let activeStatCard = null;
 
   function computeStats(){
@@ -761,6 +763,7 @@
         <div class="tier-cell"><span class="tier-badge tier-${row.tier.toLowerCase()}">${tierMap[row.tier].label}</span></div>
         <div class="lvl-cell">
           ${row.priority === 'urgent' ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
+          ${row.priority === 'high' ? `<span class="high-badge">高</span>` : ``}
           <span class="reason-level lvl-${primaryTag.level}" style="cursor:pointer;" onclick="event.stopPropagation();openStudentDetail(${primaryTag.idx})">${primaryTag.label}</span>
           ${restTags.length ? `
           <div class="dim-tag-row">
@@ -909,6 +912,7 @@
           <div class="tl-case-top">
             ${isActive ? `<span class="tl-latest-badge">反馈建议依据</span>` : ``}
             ${r.priority === 'urgent' ? `<span class="urgent-badge"><span class="ping"></span>紧急</span>` : ``}
+            ${r.priority === 'high' ? `<span class="high-badge">高</span>` : ``}
             <span class="reason-level lvl-${r.level}">${r.perfLabel}</span>
           </div>
           <div class="tl-evidence">${r.evidence}</div>
